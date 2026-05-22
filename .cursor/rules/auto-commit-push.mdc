@@ -1,0 +1,15 @@
+---
+description: my-ai-rules 변경 시 자동 커밋 & 푸시
+alwaysApply: true
+---
+
+# Auto Commit & Push (my-ai-rules only)
+
+`my-ai-rules/` 내 파일 수정/추가/삭제 후 → 즉시 커밋 & 푸시.
+
+## 규칙
+
+- 대상: `my-ai-rules/` 레포지토리만. 다른 레포(`ntnm`, `my-ai-study` 등)는 사용자 요청 시에만 커밋.
+- 타이밍: 파일 변경 작업이 완료된 직후 자동 실행.
+- 커밋 메시지: 변경 내용을 반영한 conventional commit 형식.
+- 푸시: `origin main`으로 즉시 push.
