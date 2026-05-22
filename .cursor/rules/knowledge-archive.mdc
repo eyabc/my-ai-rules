@@ -1,25 +1,24 @@
 ---
-description: 기술 Q&A를 주제별 마크다운으로 자동 아카이빙
+description: 기술 Q&A → my-ai-study에 md 아카이빙
 alwaysApply: true
 ---
 
 # Tech Knowledge Archive
 
-기술 Q&A 발생 → `my-ai-study` 프로젝트에 md로 기록.
+기술 Q&A → `my-ai-study/` 에 md로 기록.
 
 ## 구조
 
 ```
-my-ai-study/
-  {YYYY-MM-DD}_{topic-kebab-case}/
-    README.md             ← 주제 개요
-    {NN}_{subtopic}.md    ← 세부 내용 (e.g. 01_rebase-vs-merge.md)
+my-ai-study/{YYYY-MM-DD}_{topic-kebab-case}/
+  README.md            ← 주제 개요
+  {NN}_{subtopic}.md   ← e.g. 01_rebase-vs-merge.md
 ```
 
 ## 규칙
 
-- 새 주제 → `my-ai-study/` 루트에 디렉토리 생성. 동일 주제 디렉토리 존재 시 기존에 추가.
-- 각 Q&A → 개별 md. 후속 질문은 같은 디렉토리에 번호 이어서 추가.
+- 새 주제 → 디렉토리 생성. 동일 주제 존재 시 기존에 추가.
+- 각 Q&A → 개별 md. 후속 질문 → 번호 이어서 추가.
 - md 포맷: `# 제목` → `## 질문` → `## 답변` → `## 참고`
-- 기록 대상: 언어/프레임워크, DevOps/인프라, 아키텍처/패턴, 보안/성능/디버깅
-- 제외: 단순 파일 수정, 리팩터링 실행, 커밋/PR 등 "실행" 작업
+- ✓ 기록: 언어/프레임워크, DevOps/인프라, 아키텍처/패턴, 보안/성능
+- × 제외: 단순 파일 수정, 리팩터링, 커밋/PR 등 실행 작업

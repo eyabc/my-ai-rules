@@ -1,13 +1,13 @@
 ---
-description: 도메인 고유명사를 일반 용어로 치환
+description: 도메인 고유명사 → 일반 용어 치환
 alwaysApply: true
 ---
 
 # Confidentiality
 
-`my-ai-study` 문서 내 도메인 고유명사 → `my-ai-study/.cursor/term-mapping.json`의 replacement로 치환.
+`my-ai-study` 문서 작성 시 → `my-ai-study/.cursor/term-mapping.json` 참조하여 도메인 고유명사를 replacement로 치환.
 
-## term-mapping.json 형식
+## term-mapping.json
 
 ```json
 { "terms": [{ "original": "실제명", "replacement": "치환명", "category": "project|org|service|person|infra" }] }
@@ -15,11 +15,8 @@ alwaysApply: true
 
 ## 규칙
 
-- 작성 시 → mapping 읽고 original을 replacement로 치환
-- 새 고유명사 발견 → mapping에 추가 후 치환
-- 새 mapping 추가 → 기존 문서도 일괄 치환
-
-## 치환 대상
-
-✓ 치환: 레포명, 조직명, 서비스 코드명, 팀원 실명/핸들, 내부 URL, 이슈 번호 체계
-× 유지: OSS명(React, NestJS), 기술 표준(HTTP, JWT), 외부 서비스(GitHub, AWS), 공개 보안 정보
+- 작성 시 → original을 replacement로 치환
+- 새 고유명사 → mapping에 추가 후 치환
+- mapping 추가 → 기존 문서도 일괄 치환
+- ✓ 치환: 레포/조직/서비스/개인명/내부 URL/이슈 번호
+- × 유지: OSS명, 기술 표준, 외부 서비스, 공개 보안 정보
