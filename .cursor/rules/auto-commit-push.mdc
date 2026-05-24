@@ -8,9 +8,20 @@ alwaysApply: true
 | 레포 | 동작 |
 |---|---|
 | `my-ai-rules/` | 변경 즉시 commit & push (conventional commit) |
-| 그 외 (`ntnm`, `my-ai-study`, `my-jira`, ...) | 사용자 요청 시에만 |
+| `my-jira/` | 변경 즉시 commit & push + GitHub 이슈 자동 발행/연동 |
+| 그 외 (`ntnm`, `my-ai-study`, ...) | 사용자 요청 시에만 |
 
 이슈 키워드(`Closes` / `Fixes` / `Refs #N`) → `github-issue-tracking` rule 참조.
+
+## my-jira 자동화 상세
+
+- 의미 있는 변경(기능/버그/리팩터/문서) → 응답 종료 전 자동으로:
+  1. `gh issue create|comment|close` (github-issue-tracking 규칙)
+  2. conventional commit (이슈 footer `Closes/Fixes/Refs #N` 자동 삽입)
+  3. `git push`
+- trivial(오타·포맷·단일 코멘트)·조회·진단만 한 응답 → skip.
+- `.env`, `*.token.json`, `google-credentials.json`, `data/issues/*.json` 내 민감 정보는 절대 커밋 본문/이슈 본문에 노출 금지.
+- 충돌·테스트 실패·`pnpm security:check` 실패 시 push 중단 후 사용자에게 보고.
 
 ## 제약
 
