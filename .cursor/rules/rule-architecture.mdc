@@ -1,0 +1,54 @@
+---
+description: 룰 레이어 분리 정책 — Universal vs Repo-specific
+alwaysApply: true
+---
+
+# Rule Architecture
+
+룰 파일의 **위치**는 결합 범위를 결정한다. 잘못 두면 디렉터리 간 강한 결합이 생긴다.
+
+## 두 레이어
+
+| 레이어 | 위치 | 적용 범위 | 예시 |
+|--------|------|-----------|------|
+| **Universal** | `~/.cursor/rules/` (= `my-ai-rules/.cursor/rules/` 심볼릭 링크) | 모든 워크스페이스 | 이슈 트래킹, 커밋 컨벤션, 기밀성, 토큰 절약 |
+| **Repo-specific** | `{repo}/.cursor/rules/` | 그 레포 한정 | 도메인 모델, CLI 매핑, 파일 레이아웃 |
+
+## 분리 기준
+
+### Universal로 둘 것
+
+- ✓ 어떤 레포에서든 동일하게 적용되는 거동(이슈/커밋/PR 라이프사이클)
+- ✓ 보안·기밀성·언어 정책
+- ✓ 메타 룰(룰 작성법, 학습 아카이브 등)
+
+### Repo-specific로 둘 것
+
+- ✓ 그 레포의 도메인 모델·스키마(`data/issues/*.json`, `forest_term`, `MJ-*` 키 형식 등)
+- ✓ 그 레포의 CLI 명령(`pnpm agent:issue`, `pnpm rules:sync` 등)
+- ✓ 그 레포의 파일 경로·디렉터리 규칙
+
+## 결합 금지 원칙
+
+**다른 레포의 `.cursor/rules/`에서 `my-ai-rules`를 직접 참조(심볼릭 링크·상대 경로·include)하지 않는다.**
+
+- × `my-jira/.cursor/rules/foo.mdc → ../../../my-ai-rules/...` (금지)
+- ✓ Universal 룰은 `~/.cursor/rules/`에 두고 Cursor가 모든 워크스페이스에 자동 주입하게 한다.
+
+이유:
+1. 디렉터리 구조에 종속됨 (clone 위치 바뀌면 깨짐)
+2. CI/CD 다른 머신에서 `my-ai-rules` 부재 시 broken link
+3. 단일 장애점 — 다른 레포의 룰이 `my-ai-rules`에 묶임
+4. 협업자에게 `my-ai-rules`(private 가능)를 강제 노출
+
+## 운영 방식
+
+1. **편집**: 항상 `my-ai-rules/.cursor/rules/`에서 한다 (SSOT, git-tracked).
+2. **반영**: `~/.cursor/rules/`는 `my-ai-rules/.cursor/rules/`의 심볼릭 링크 폴더이므로 편집 즉시 모든 워크스페이스에 반영된다.
+3. **신규 머신 셋업**: `my-ai-rules` clone 후 `scripts/setup-user-rules.sh` 1회 실행.
+4. **검증**: `ls -la {repo}/.cursor/rules/` 에 외부 경로 심볼릭 링크가 없어야 한다.
+
+## 예외
+
+- `my-ai-rules/` 자체의 `.cursor/rules/`는 SSOT이므로 그 자체가 universal 풀.
+- 같은 레포 내 `.cursor/rules/` ↔ `.agents/skills/` 등의 internal 참조는 허용.
