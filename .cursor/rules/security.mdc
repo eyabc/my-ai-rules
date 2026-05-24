@@ -1,0 +1,88 @@
+---
+description: 코드·커밋·푸시·3rd-party 보안 체크리스트
+alwaysApply: true
+---
+
+# Security
+
+## 1. Secrets
+
+민감 파일 = `.env*` / `*.token.json` / `*credentials*.json` / `*.pem` / `*.key` / `id_rsa*` / `service-account*.json` / `google-credentials.json`
+
+| × 금지 | ✓ 대체 |
+|---|---|
+| 코드 하드코딩 (`KEY="sk-..."`) | `.env` + `process.env.X` |
+| `.env*` 커밋 | `.gitignore` + `.env.example` (값 비움) |
+| 로그/이슈/PR 본문에 토큰 노출 | 마스킹 (`sk-***`) |
+| 히스토리 잔존 | `git filter-repo` + 키 rotate 즉시 |
+
+탐지 패턴: `(api[_-]?key|secret|password|token|bearer|authorization)\s*[:=]\s*['"]\S+`
+
+## 2. Pre-commit
+
+- ✓ `git diff --cached` 시각 점검
+- ✓ 위 secrets 패턴 grep
+- ✓ 신규 민감 파일 → `.gitignore` 먼저
+- ✓ deps 추가 시 `npm audit` / `pnpm audit`
+- × 디버그 (`console.log({token})`, `print(password)`)
+- × 큰 바이너리·덤프 (`.sqlite`, `.dump`, `*.zip` > 1MB)
+
+## 3. Pre-push
+
+- ✓ `git log -p origin/{br}..HEAD` 재확인
+- ✓ 강제 푸시 → `--force-with-lease` + 사용자 명시 요청
+- ✓ Husky/lefthook hook 비활성화 ×
+- × `main` 직접 푸시 (PR 경유)
+
+## 4. Post-push (사고 대응)
+
+순서: 키 rotate → `git filter-repo --invert-paths --path <file>` → `git push --force-with-lease` → GitHub Secret Scanning 알림 확인 (`gh api /repos/{o}/{r}/secret-scanning/alerts`) → 사용자 보고.
+
+## 5. Third-party / Supply Chain
+
+| 항목 | 규칙 |
+|---|---|
+| 추가 전 | `npm view <pkg>` → maintainer / weekly DL / last publish 확인 |
+| 설치 | `npm ci` / `pnpm install --frozen-lockfile` (lockfile 신뢰) |
+| typosquat | `reqeust`, `lodahs` 등 이름 유사 × |
+| 버전 | exact / `~` 우선 (`^` 광범위 위험) |
+| postinstall | 신규 패키지의 `scripts.postinstall` 본문 검토 |
+| git URL 의존 | `git+https://...` × |
+| 라이선스 | GPL/AGPL 상업 코드 혼입 × |
+| 정기 점검 | Dependabot / Renovate / `npm audit --omit=dev` 주 1회 |
+
+### Mini Shai-Hulud 트리거
+
+`postcss.config.mjs` / `.eslintrc.js` / `.husky/*` 변경 시 → diff 의도 재확인 + 악성 코드 패턴 (외부 fetch, eval, base64 payload) 검사.
+
+## 6. Coding Security
+
+### Input / Output
+- 외부 입력 → schema 검증 (Zod / class-validator)
+- SQL → ORM 또는 parameterized (`$queryRaw` 시 binding 필수)
+- HTML → `dangerouslySetInnerHTML` × / 부득이 시 DOMPurify
+- 파일 업로드 → 확장자 + MIME + magic bytes + size limit
+
+### Auth & Session
+- 비밀번호 → `bcrypt` cost ≥ 10 / `argon2id`
+- JWT → secret env, `exp ≤ 1h`, refresh 분리
+- 쿠키 → `httpOnly`, `secure`, `sameSite=lax|strict`
+- CSRF → state-changing POST/PUT/DELETE 토큰 검증
+
+### Backend
+- error → stack/SQL/path 외부 노출 ×
+- log → PII / 토큰 마스킹
+- CORS → `*` × / origin allow-list
+- rate limit → login / OTP / payment 필수
+
+### Frontend
+- env → `NEXT_PUBLIC_*` 만 클라이언트 노출
+- token → `localStorage` × → httpOnly cookie ✓
+- `<script src>` 외부 → SRI hash + 신뢰 도메인
+
+## 7. AI 자동 적용
+
+- 코드 생성 → 위 패턴 자동 준수
+- 사용자 코드에서 secret 발견 → 즉시 경고 + 마스킹 사본 + rotate 안내
+- 신규 외부 패키지 도입 → maintainer / DL / 위험 1줄 요약 제공
+- 위반 발견 → 작업 중단 + 사용자 보고
