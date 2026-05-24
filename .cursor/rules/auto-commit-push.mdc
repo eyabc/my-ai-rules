@@ -1,48 +1,19 @@
 ---
-description: my-ai-rules 자동 커밋·푸시 + Closes #N 자동 삽입
+description: 레포별 자동 커밋·푸시 스코프
 alwaysApply: true
 ---
 
 # Auto Commit & Push
 
-`my-ai-rules/` 파일 변경 후 → 즉시 commit & push (conventional commit).
-× 다른 레포(`ntnm`, `my-ai-study` 등) → 사용자 요청 시에만.
-
-## Closes #N 자동 삽입
-
-작업 컨텍스트의 GitHub 이슈 번호 → 커밋 메시지에 자동 추가 → 머지 시 GitHub가 자동 close.
-
-### 이슈 번호 탐지 (우선순위)
-
-1. 사용자가 `#N` 명시 → 그대로 사용
-2. 브랜치명 패턴 `*/issue-{N}-*` or `feat/{N}-*` → 추출
-3. 현재 세션에서 방금 생성/언급한 이슈 → 사용
-4. 위 모두 없음 → `gh issue list --search "in:title {커밋주제}"` 조회 후 매칭
-5. 매칭 0건 → Closes 생략 (강제 ×)
-
-### 커밋 메시지 포맷
-
-```
-{type}({scope}): {subject}
-
-{body}
-
-Closes #{N}
-```
-
-여러 이슈: `Closes #1, #2, #3`
-
-### 동작 조건
-
-| 상태 | Closes 삽입 |
+| 레포 | 동작 |
 |---|---|
-| 기능 완료 + 검증 통과 | ✓ |
-| 부분 완료 / WIP | × (`Refs #N` 사용) |
-| 리팩터/포맷/오타 | × |
-| 버그 픽스 | ✓ (`Fixes #N`) |
+| `my-ai-rules/` | 변경 즉시 commit & push (conventional commit) |
+| 그 외 (`ntnm`, `my-ai-study`, `my-jira`, ...) | 사용자 요청 시에만 |
+
+이슈 키워드(`Closes` / `Fixes` / `Refs #N`) → `github-issue-tracking` rule 참조.
 
 ## 제약
 
-- ✓ commit 전 이슈 존재 확인 (`gh issue view {N}`)
-- × 이미 closed 이슈 → Closes ×, `Refs #N` 으로 변경
+- ✓ conventional commit: feat / fix / chore / docs / refactor
 - × force push → 사용자 명시 요청 시에만
+- × 민감 파일 (`.env`, `*.token.json`, credentials) ×
