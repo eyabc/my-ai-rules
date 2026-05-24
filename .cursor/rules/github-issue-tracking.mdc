@@ -50,9 +50,23 @@ alwaysApply: true
 3. 없음 → `gh issue create -t "..." -b "..."`
 4. label: feature/bug/refactor 중 택1
 
+## 자동 Close
+
+작업 완료 = "구현 + 검증 통과 + 커밋/푸시 완료" → 관련 이슈 자동 close.
+
+| 조건 | 동작 |
+|---|---|
+| 단일 이슈 완료 | `gh issue close {N} -c "{한 줄 완료 코멘트}"` |
+| 커밋 메시지에 `Closes #N` 포함 | GitHub 자동 close, 별도 명령 × |
+| 부분 완료 (후속 작업 남음) | × close, 진행 코멘트만 추가 |
+| 검증 실패/롤백 | × close, 실패 사유 코멘트 |
+
+완료 코멘트 포맷: `Done in {commit-sha}. {핵심 결과 1줄}`
+
 ## 제약
 
 - ✓ 레포: 현재 작업 중인 git 레포 기준
-- ✓ 사용자 승인 없이 이슈 자동 생성 가능 (단순 트래킹)
+- ✓ 사용자 승인 없이 이슈 자동 생성/close 가능 (단순 트래킹)
 - × 비공개·민감 정보 → `confidentiality` rule 적용 후 기록
 - × 이슈 본문에 전체 코드 ×, 경로/요약만
+- × 미검증 상태로 close ×
