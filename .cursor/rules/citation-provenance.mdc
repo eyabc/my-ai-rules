@@ -1,0 +1,48 @@
+---
+description: 인용·근거 제시 시 git 생성·수정일·줄번호 표 자동 첨부
+alwaysApply: true
+---
+
+# Citation Provenance
+
+워크스페이스 내 파일·문서·코드 스니펫을 **근거로 인용**할 때마다,
+응답 말미에 "근거 문서 메타 (git 기준)" 표를 자동으로 첨부한다.
+
+## 필수 컬럼 (순서 고정)
+
+| # | Path | Created | Last modified | Lines |
+|---|------|---------|---------------|-------|
+
+- `Path`: 워크스페이스 루트 기준 상대경로
+- `Created`: 첫 커밋 시각 (KST). 조회식 ↓
+  - `git log --diff-filter=A --follow --format="%ai" -- <path> | tail -1`
+- `Last modified`: 최신 커밋 시각 (KST). 조회식 ↓
+  - `git log -1 --format="%ai" -- <path>`
+- `Lines`: 실제 인용한 줄 범위 (예: `L4–11, L28–30`)
+
+## 동작 규칙
+
+- ✓ 답변 전에 위 git 명령을 **직접 실행**하여 값을 채운다. 사용자에게 묻지 않는다.
+- ✓ git 미추적 파일 → `Created`/`Last modified` 칸에 `untracked`.
+- ✓ 워크스페이스 파일이 **아닌 출처**(웹 URL, 터미널 출력, MCP 결과, 스크린샷 등)는 표에 포함하지 않고, 본문에서 출처 종류를 명시.
+- ✓ `Last modified` 가 **오늘 기준 4주 이상 경과** → 표 아래 한 줄 stale 경고 추가.
+- ✓ 표는 압축 형식 유지. 파일 본문은 표에 넣지 않는다(코드 인용은 본문에 별도).
+- × 인용한 워크스페이스 파일이 하나도 없으면 표 자체를 생략.
+
+## 출력 포맷 예시
+
+```
+... 본문 답변 ...
+
+| # | Path | Created | Last modified | Lines |
+|---|------|---------|---------------|-------|
+| 1 | `docs/issue-prod-points-to-staging.md` | 2026-05-08 01:17 KST | 2026-05-08 01:17 KST | L4–11, L28–30 |
+| 2 | `docs/server-admin.md` | 2026-03-26 21:55 KST | 2026-05-14 23:19 KST | L20–23, L177–182 |
+
+⚠ `project-documentation.md` 는 최종 수정 후 6주 경과 — 정보가 stale일 수 있음.
+```
+
+## 적용 범위
+
+- 인용·근거 제시가 포함된 모든 답변(언어 무관) — 한국어 응답에서도 컬럼명은 영문 유지.
+- `confidentiality.mdc` 와 충돌 시 기밀 정책 우선.
