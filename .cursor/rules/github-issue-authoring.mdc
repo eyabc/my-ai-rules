@@ -1,0 +1,143 @@
+---
+description: GitHub 이슈 분석·작성·우선순위 판단 프롬프트 (도메인 무관 공용)
+alwaysApply: false
+---
+
+# GitHub Issue Authoring Prompt
+
+이슈를 분석하고 코멘트를 작성하거나, 우선순위 조정·담당자 재할당을 수행할 때 사용하는 공용 프롬프트.
+
+## 1. 이슈 분석 흐름 (Issue Analysis Flow)
+
+```
+1) 이슈 읽기 → gh issue view {N}
+2) 관련 코드/문서 탐색 → 실제 동작 확인
+3) 사실관계 확정 (Fact Table 작성)
+4) 기능 결함 여부 판단 (functional defect vs doc-only vs cosmetic)
+5) 결정 옵션 도출 (Option A/B/...)
+6) 우선순위·담당자 결정
+7) 코멘트 작성 + 라벨/assignee 반영
+```
+
+## 2. 코멘트 구조 (Comment Structure)
+
+### 2.1 Plan 코멘트 (분석 결과 + 제안)
+
+```markdown
+## 기능 동작 점검 결과 / Functional Impact
+- {기능 결함 여부 한 줄 요약}
+- {증거: URL, 코드 경로, 스크린샷 등}
+
+## 사실관계 / Confirmed Facts
+| 항목 | 기대 (문서/가이드) | 실제 (코드/staging) |
+|---|---|---|
+| ... | ... | ... |
+
+## 결정 옵션 / Decision Options
+**Option A** — {설명} (권장/비권장)
+**Option B** — {설명}
+
+## 우선순위 / Priority
+- {severity 판단 근거}
+- {강등/유지/상승 제안}
+
+## 담당자 / Assignment
+- {누구에게 위임하는지 + 결정 항목 목록}
+
+## 다음 단계 / Next Steps
+- [ ] {체크리스트}
+```
+
+### 2.2 종료 코멘트 (Close)
+
+```markdown
+## 종료 / Closed
+**원인**: {한 줄}
+**결론**: {수정 완료 / won't-fix / 외부 위임}
+**증거**: {링크 또는 참조}
+```
+
+### 2.3 증거 코멘트 (Evidence — 스크린샷 포함)
+
+```markdown
+## 증거 스크린샷 / Evidence Screenshot ({날짜})
+{설명}
+![{alt text}]({image URL})
+- URL: `{페이지 경로}`
+- 동작: {재현 절차 요약}
+- 캡처 시점: {날짜 + commit hash}
+```
+
+## 3. 우선순위 판단 기준 (Priority Matrix)
+
+| 조건 | 심각도 |
+|---|---|
+| 기능 차단 (사용자 시나리오 불가) | **Blocker** |
+| 기능 오동작 (잘못된 결과 반환) | **Critical** |
+| 기능은 동작하나 UX 결함 / 데이터 불일치 | **Major** |
+| 문서·표기·cosmetic 불일치 (기능 정상) | **Minor** |
+| 개선 제안 / nice-to-have | **Trivial** |
+
+### 강등 조건 (Downgrade triggers)
+- 기능 동작에 이상 없음 → Major 이하로 강등 검토
+- 외부 문서(가이드/Notion 등)만의 문제 → Minor + `pending` + 기획자 위임
+- 환경 한정(staging only) / 일시적 → 우선순위 낮춤
+
+### 상승 조건 (Upgrade triggers)
+- 보안 노출 (스택 트레이스, 내부 경로, PII) → Major 이상
+- 데이터 손상 가능성 → Critical
+- 사용자 시나리오 완전 차단 → Blocker
+
+## 4. 라벨 운용 (Label Strategy)
+
+| 라벨 | 용도 |
+|---|---|
+| `bug` | 기능 결함 (런타임 오동작) |
+| `documentation` | 문서·가이드·주석 불일치 |
+| `enhancement` | 신규 기능 / 개선 |
+| `pending` | 의사결정 대기 (PO/기획자 판단 필요) |
+| `in-progress` | 작업 중 |
+| `refactor` | 동작 변경 없는 코드 개선 |
+
+### 라벨 변경 시
+- `bug` → `documentation`: 기능 정상 확인 시
+- `pending` 추가: 외부 결정 필요 시
+- `bug` 제거 금지: 기능 결함이 실제 존재할 때
+
+## 5. 담당자 위임 (Assignment Delegation)
+
+### 기획자/PO 위임 조건
+- SSOT 결정 필요 (가이드 vs 코드 중 어느 쪽이 정답?)
+- 비즈니스 룰 판단 (정책 변경 여부)
+- 외부 문서 수정 권한이 개발자에게 없음
+
+### 위임 시 코멘트 필수 항목
+1. 결정이 필요한 구체적 질문 (번호 목록)
+2. 각 옵션의 장단점
+3. 권장안 명시 (AI/개발자 관점)
+4. 관련 이슈 번호 (의존성)
+
+## 6. 스크린샷 첨부 절차
+
+```
+1) browser MCP 또는 staging 접속
+2) 증거 화면 캡처 (browser_take_screenshot)
+3) 파일을 레포에 업로드:
+   - .gitignore에 막힌 경로 → GitHub Contents API 사용
+     gh api repos/{owner}/{repo}/contents/{path} --method PUT \
+       -f message="evidence: {설명}" \
+       -f content="$(base64 -i {file})" \
+       -f branch="{branch}"
+   - .gitignore에 안 막힌 경로 → git add + commit + push
+4) raw URL을 코멘트에 ![alt](url) 형식으로 삽입
+```
+
+## 7. 제약 (Constraints)
+
+- × 이슈 본문에 전체 소스코드 붙여넣기 (경로 + 요약만)
+- × 미검증 상태에서 close
+- × 민감 정보 (토큰, 비밀번호, PII) 코멘트 노출
+- × 사용자 미승인 상태에서 라벨/assignee 일방 변경
+- ✓ 한·영 병기 권장 (국제 협업 대비)
+- ✓ 코드/경로는 반드시 백틱
+- ✓ 제목은 `[카테고리][심각도] 요약` 형식 권장
