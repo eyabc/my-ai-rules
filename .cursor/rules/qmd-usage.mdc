@@ -1,0 +1,88 @@
+---
+description: 로컬 마크다운/코드 검색 도구 qmd 사용 레퍼런스
+alwaysApply: true
+---
+
+# QMD Usage
+
+`qmd` = 로컬 마크다운/코드 하이브리드 검색 엔진 (BM25 + 벡터 + LLM 재순위). MCP로 Cursor 채팅에서 자동 호출됨. 모든 모델·인덱스는 온디바이스 (`~/.cache/qmd/`).
+
+## 등록된 컬렉션 (11개)
+
+| 컬렉션 | 경로 | 내용 |
+|--------|------|------|
+| `ntnm` | `~/IdeaProjects/ntnm` | Neutinamu Library 메인 프로젝트 문서 |
+| `ntnm-agents` | `~/IdeaProjects/ntnm/.agents` | 공용 skills/workflows/rules (SKILL.md 등) |
+| `ntnm-code` | `~/IdeaProjects/ntnm` (ts/tsx/js/py) | NestJS + Next.js + Playwright 소스 |
+| `my-app` | `~/IdeaProjects/My-app` | 개인 앱 문서 (.md/.mdx/.mdc) |
+| `my-app-code` | `~/IdeaProjects/My-app` (코드) | 개인 앱 소스 |
+| `my-data` | `~/IdeaProjects/my-data` | Toastmasters 스크립트, 저널, 개인 노트 |
+| `my-data-rules` | `~/IdeaProjects/my-data/.cursor/rules` | my-data 전용 룰 |
+| `my-ai-study` | `~/IdeaProjects/my-ai-study` | 학습 아카이브 (knowledge-archive 산물) |
+| `my-ai-rules` | `~/IdeaProjects/my-ai-rules/.cursor/rules` | universal 룰 (= `~/.cursor/rules/` 심볼릭) |
+| `my-jira` | `~/IdeaProjects/my-jira` | Jira 도구 문서 |
+| `my-jira-code` | `~/IdeaProjects/my-jira` (코드) | Jira 도구 소스 |
+
+> 마크다운 컬렉션과 코드 컬렉션을 **분리**한 이유: 검색 노이즈 감소 + `-c` 필터링 용이.
+
+## 명령어 (CLI)
+
+```bash
+qmd query "검색어"                       # 하이브리드 (최고 품질, 권장)
+qmd search "키워드"                      # BM25만 (LLM 미사용, 빠름)
+qmd vsearch "의미적 매칭"                 # 벡터만 (한국어 의미 검색 강함)
+
+qmd query "x" -c ntnm-code               # 컬렉션 좁히기
+qmd query "x" --json -n 10               # JSON 출력 10개
+qmd query "x" --files --min-score 0.4    # 파일 경로만, 점수 임계
+
+qmd get "qmd://ntnm/path/to/file.md" --full
+qmd get "#abc123"                        # docid 단축 해시
+qmd multi-get "journals/2025-*.md"       # 글롭 일괄
+
+qmd ls <collection>                      # 인덱스된 파일 목록
+qmd status                               # 인덱스 상태·헬스
+qmd update                               # 변경 파일 재인덱싱 (필요 시)
+qmd embed --chunk-strategy auto          # 청크 임베딩 (AST 모드)
+qmd cleanup                              # 캐시 정리
+```
+
+## MCP 도구 (Cursor 채팅에서 자동 호출)
+
+| 도구 | 용도 |
+|------|------|
+| `query` | 검색. `lex` / `vec` / `hyde` 서브쿼리 + 의도(`intent`) |
+| `get` | 문서 1건 (path 또는 docid) |
+| `multi_get` | 글롭/콤마 일괄 |
+| `status` | 인덱스 상태 |
+
+## 자동화
+
+| 항목 | 위치 |
+|------|------|
+| LaunchAgent | `~/Library/LaunchAgents/com.qmd.autoupdate.plist` (매일 04:00) |
+| 실행 스크립트 | `~/.local/bin/qmd-auto-update.sh` |
+| 통합 로그 | `~/Library/Logs/qmd-autoupdate.log` |
+| 락 파일 | `~/.cache/qmd/autoupdate.lock` |
+
+Mac 절전 시 다음 wake-up에 catch-up 실행. 중복 실행은 락으로 차단.
+
+## 환경 변수 (`~/.zshrc` 최하단)
+
+| 변수 | 값 |
+|------|----|
+| `QMD_EMBED_MODEL` | `hf:Qwen/Qwen3-Embedding-0.6B-GGUF/Qwen3-Embedding-0.6B-Q8_0.gguf` (CJK 멀티링구얼) |
+| `QMD_EDITOR_URI` | `cursor://file/{path}:{line}:{col}` (결과 클릭 → Cursor) |
+
+## 아키텍처 메모
+
+- **AST chunking**: `.ts/.tsx/.js/.jsx/.py/.go/.rs`는 함수/클래스/import 경계로 분할 (`--chunk-strategy auto`)
+- **마크다운 chunking**: 헤딩·코드 펜스·문단을 경계로 한 smart chunking (~900 토큰)
+- **node-llama-cpp + Metal**: Apple Silicon GPU 가속 (자동)
+- **Node.js**: nvm의 arm64 v22.15.0 사용. `/usr/local/bin/node`(x86_64 Rosetta)와 충돌 회피를 위해 `~/.zshrc` 최하단에 `nvm use default` 재적용
+
+## 관련 룰
+
+- `local-search-first.mdc` — 작업 전 검색 우선 행동 규칙
+- `knowledge-archive.mdc` — 학습 기록 시 qmd 인덱스 반영
+- `continuous-improvement.mdc` — 반복 패턴 탐지에 qmd 활용

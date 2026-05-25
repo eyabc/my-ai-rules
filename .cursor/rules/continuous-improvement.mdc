@@ -27,6 +27,8 @@ alwaysApply: true
 
 - 사용자 질문에서 학습 가치 있는 기술 주제 → `knowledge-archive` rule에 따라 아카이빙 제안
 - 새로운 도구·패턴·보안 이슈 → study 기록 제안
+- 반복 패턴 탐지·중복 작업 의심 시 → `local-search-first` rule에 따라 `qmd query` 로 과거 기록 먼저 검색
+- "전에", "이전에", "다시" 등 시간 참조 발견 시 → qmd로 과거 컨텍스트 회수 후 응답
 
 ## 출력 포맷
 

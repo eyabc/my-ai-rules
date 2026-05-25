@@ -1,0 +1,57 @@
+---
+description: 작업 전 qmd로 과거 지식·룰·작업을 먼저 검색
+alwaysApply: true
+---
+
+# Local Search First
+
+새 작업 시작 전 → `qmd`로 과거 기록을 먼저 검색한다. 중복 작업·맥락 누락·환각 방지.
+
+## 검색 시점
+
+다음 신호 감지 시 → qmd 검색 우선:
+
+- 사용자가 "전에", "이전에", "다시", "또" 등 과거 시점 참조 → 과거 작업 검색
+- 기술 Q&A → `my-ai-study` 컬렉션 검색 (knowledge-archive에 이미 있는지)
+- 룰/정책 질문 → `my-ai-rules`, `*-rules` 컬렉션 검색
+- 도메인 용어·고유명사·티켓 키(MJ-*, 등) → 전체 검색으로 컨텍스트 수집
+- 새 기능·리팩터 착수 전 → 비슷한 패턴이 있는지 `ntnm-code` / `my-app-code` 검색
+- 한국어 키워드 → 자연어 그대로 `query` (Qwen3 멀티링구얼 임베딩 적용됨)
+
+## 검색 방식
+
+| 상황 | 도구 |
+|------|------|
+| 일반 검색 | MCP `query` (Cursor 채팅에서 자동 호출) |
+| 컬렉션 제한 | `query` + `collection` 인수 (예: `my-ai-rules`, `ntnm-code`) |
+| 정확 키워드만 | `search` (BM25, 빠름, LLM 미사용) |
+| 의미적 매칭 | `vsearch` (벡터, 한국어 의미 검색에 유리) |
+| 문서 1건 | `get qmd://<collection>/<path>` |
+| 글롭 일괄 | `multi_get "journals/2025-05*.md"` |
+
+## 인덱스 신선도
+
+- 파일 작성·수정 직후 → 검색 누락 가능. `qmd update` 안내하거나 새벽 04:00 LaunchAgent에 위임
+- 새 룰·아카이브 추가 → 즉시 반영하려면 `qmd update -c <collection> && qmd embed`
+- 검색 결과 0건 → "인덱스에 없음"으로 단정 ×. `qmd status`로 pending 청크 확인 후 판단
+
+## 출력 표기
+
+검색을 사용했을 때 → 응답에 출처를 명시:
+
+```
+출처: qmd://<collection>/<path> (score XX%)
+```
+
+## 제약
+
+- ✓ 추측·기억 대신 검색 결과 인용
+- ✓ 결과 없으면 명시 ("qmd에서 관련 내용 없음")
+- × 모든 사소한 작업에 검색 강제 ×. 명확한 단일 파일 수정 등은 생략
+- × 같은 쿼리 반복 호출 ×. 결과가 0건이면 키워드 바꿔 1-2회만 재시도
+
+## 관련 룰
+
+- `qmd-usage.mdc` — qmd 명령·컬렉션 레퍼런스
+- `knowledge-archive.mdc` — 새 학습은 my-ai-study에 기록 → qmd 인덱스 자동 반영
+- `continuous-improvement.mdc` — 반복 패턴 탐지에 qmd 활용
