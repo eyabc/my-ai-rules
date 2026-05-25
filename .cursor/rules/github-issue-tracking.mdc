@@ -19,6 +19,22 @@ alwaysApply: true
 | 검증 실패 / 롤백 | 실패 코멘트만 | `gh issue comment` |
 | 리팩터·포맷·오타 | × | — |
 
+## Issue-to-PR 전체 흐름
+
+```
+이슈 확인 → RCA 코멘트 → 브랜치 생성 → 수정 → 커밋 → PR → 머지
+```
+
+| 단계 | 명령 | 비고 |
+|---|---|---|
+| 1. 이슈 확인 | `gh issue view {N} --json title,body,state,labels` | 상태·라벨 파악 |
+| 2. RCA 코멘트 | `gh issue comment {N} -b "### RCA\n..."` | 근본 원인 + 수정 계획 |
+| 3. 브랜치 생성 | `git checkout dev && git checkout -b fix/{N}-{slug}` | dev 기준. 네이밍: `fix/` `feat/` `refactor/` |
+| 4. 코드 수정 | — | 최소 범위 변경 |
+| 5. 커밋 | `git commit -m "fix(...): ... \n\nFixes #{N}"` | footer에 이슈 키워드 필수 |
+| 6. PR 생성 | `gh pr create --base dev` | body에 `Fixes #{N}` → 머지 시 자동 close |
+| 7. 머지 | `gh pr merge {PR} --squash --auto --delete-branch` | CI 통과 후 자동 머지 |
+
 ## 작성 원칙
 
 1. 쉬운 언어, 평이한 단어
@@ -54,24 +70,49 @@ alwaysApply: true
 
 ### 키워드
 
-| 작업 상태 | 키워드 |
-|---|---|
-| 기능 완료 + 검증 통과 | `Closes #N` |
-| 버그 픽스 완료 | `Fixes #N` |
-| 부분 완료 / WIP / 이미 closed 참조 | `Refs #N` |
+| 작업 상태 | 키워드 | 위치 |
+|---|---|---|
+| 기능 완료 + 검증 통과 | `Closes #N` | 커밋 footer + PR body |
+| 버그 픽스 완료 | `Fixes #N` | 커밋 footer + PR body |
+| 부분 완료 / WIP / 이미 closed 참조 | `Refs #N` | 커밋 footer |
 
 여러 이슈: `Closes #1, #2, #3`
+
+### PR body에 키워드 필수
+
+커밋 footer **와** PR body **양쪽 모두**에 `Fixes #N` / `Closes #N` 을 넣어야 squash merge 시 자동 close가 확실히 동작한다.
 
 ## 라벨
 
 기본: enhancement / bug / refactor / docs
 커스텀 (레포별): cli / ui / data / security / ...
 
+## 브랜치 네이밍
+
+| 유형 | 패턴 | 예시 |
+|---|---|---|
+| 버그 수정 | `fix/{N}-{slug}` | `fix/595-copies-pk-sequence` |
+| 기능 추가 | `feat/{N}-{slug}` | `feat/100-user-profile` |
+| 리팩터 | `refactor/{N}-{slug}` | `refactor/200-auth-cleanup` |
+
+브랜치는 항상 `dev` 에서 생성. `main` 직접 작업 금지.
+
+## 머지 정책
+
+```bash
+gh pr merge {PR} --squash --auto --delete-branch
+```
+
+- `--squash`: 커밋 정리 (1 PR = 1 commit)
+- `--auto`: CI 통과 후 자동 머지
+- `--delete-branch`: 머지 후 브랜치 자동 삭제
+
 ## 제약
 
 - ✓ 현재 git 레포 기준
 - ✓ 단순 트래킹 → 사용자 승인 없이 자동 실행
 - ✓ commit/close 전 `gh issue view {N}` 존재 확인
+- ✓ PR 생성 전 RCA 코멘트 (버그 이슈 시)
 - × 민감 정보 → `confidentiality` rule 적용 후 기록
 - × 본문에 전체 코드 (경로/요약만)
 - × 미검증 close

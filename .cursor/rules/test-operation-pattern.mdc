@@ -1,0 +1,199 @@
+---
+description: Reusable round-based audit/test/verification operating pattern. Auto-applies on keywords 점검·테스트·검증·audit·smoke·regression·GO·NO-GO. Standardizes round init, preflight, scenario decomposition, browser/DB automation flow, F-XXX findings logging, evidence handling, credentials/PII safeguards, halt triggers.
+alwaysApply: false
+globs:
+  - ".project/**/0*_*.md"
+  - "tmp/db-*.sh"
+  - "tmp/*-runbook*.md"
+---
+
+# Test Operation Pattern (점검·테스트 운영 패턴)
+
+라운드 단위 audit/smoke/regression 작업의 표준 흐름. 모든 워크스페이스에 적용.
+Standard flow for round-based audit/smoke/regression work — applies to every workspace.
+
+## 0. Apply when
+
+KR: 점검 / 테스트 / 검증 / 라운드 / 스모크 / 회귀 / 핵심 기능 확인 / GO·NO-GO
+EN: audit / verify / smoke / regression / sanity / GO·NO-GO
+해제: \"임시·일회성 / ad-hoc / quick check\".
+
+## 1. Round init
+
+| 항목 | 규칙 |
+|---|---|
+| 작업 디렉터리 | `<study-repo>/.project/YYYY-MM-DD_<topic-slug>/` (gitignored) **또는** `<repo>/sub-projects/<n>/audits/...` |
+| 디렉터리명 | 영문 kebab-case, 한글 X |
+| 문서 골격 | `00_plan_and_toc.md` `01_<sys>_status_snapshot.md` `02_<entry>_path.md` `03_routes_map.md` `04_<round>_runbook.md` `05_findings_log.md` `06_go_no_go_decision.md` `evidence/` |
+| 누적 방식 | 새 주제 → `07_*` 추가 (기존 분할 X) |
+| 공통 헤더 | `Environment / Timestamp(KST) / Round R<n> / Tool / Build commitHash` 5줄 |
+
+## 2. Preflight
+
+### 2.1 Constitution block (모든 라운드 첫 응답)
+
+```
+TARGET HOST: <full-url>
+SCOPE:       <READ|WRITE|FULL> (constraint)
+MCP SERVER:  <server-id>
+CREDENTIALS: <subject> (메모리 보관, 문서 placeholder)
+DOCS:        <task-dir-absolute-path>
+```
+
+User Rule 6 (\"MCP 사용 전 사용자에게 어떤 서버 쓸지 묻기\") 준수.
+
+### 2.2 Health probe (curl, ≤ 60s)
+
+| # | 검증 | 명령 |
+|---|---|---|
+| 1 | 백엔드 살아있나 | `GET /api/v1/version` (또는 health) |
+| 2 | DB 핵심 테이블 존재 | 인증 가드 응답 401 vs P2021 분기 |
+| 3 | 인증 가드 동작 | 보호된 엔드포인트 401 |
+| 4 | 프론트 렌더링 | 홈 200 |
+| 5 | 우리 공인 IP | `curl ifconfig.me` (화이트리스트 대비) |
+
+결과는 `01_*.md` \"실행 환경 단서\" 섹션에 기록.
+
+### 2.3 Credentials
+
+- 평문 기록 절대 X — `.md` 어디에도 password/token 평문 X
+- 환경변수: `tmp/.<service>.env` (gitignored, `chmod 600`)
+- 문서: `<ADMIN_USERNAME>` `<TEST_PASSWORD>` 같은 placeholder
+- 메모리 사용: `browser_fill_form` value 인자에서만
+- 라운드 종료 시 자격증명 rotation 권고
+
+## 3. Scenario decomposition
+
+(SELECT 부분 / WRITE 부분 / 본 라운드 포함 여부) 3축 매트릭스.
+시나리오 ID 접두: `A` Admin · `C` Customer · `S` Self-service · `B` Background.
+
+```markdown
+| # | 기능 | 흐름 | 본 라운드 |
+| 1 | 회원검색→대출 | (a)검색[SELECT]→(b)대출[WRITE] | (a)만 |
+| 4 | 예약 목록 | 진입[SELECT] | 전체 |
+| 3 | 예약 등록 | 생성[WRITE] | ⏭️ 스킵 |
+```
+
+각 시나리오: 진입 URL · 트리거 API · 통과 기준 (HTTP / 화면 / 콘솔).
+
+## 4. Execution loop (시나리오마다)
+
+| Step | 동작 | 도구 |
+|---|---|---|
+| A Navigate | 진입 + 스크린샷 | `browser_navigate` |
+| B Lock (첫 1회) | 세션 잠금 | `browser_lock action:lock` |
+| C Interact | 입력/클릭/대기 | `browser_fill_form` `browser_click` `browser_wait_for` |
+| D **Verify** (필수) | 구조+네트워크+콘솔 | `browser_snapshot` `browser_network_requests` `browser_console_messages` |
+| E Evidence | 결정적 캡처 1장 | `evidence/<id>-<state>.png` |
+| F Mark | 진행 보드 즉시 갱신 | `05_findings_log.md` |
+| Z Unlock (라운드 종료 1회) | 세션 해제 | `browser_lock action:unlock` |
+
+## 5. Findings log
+
+### 5.1 ID rule
+
+`F-001` 라운드 간 누적. 정정 시 새 번호 X — 기존 행에 \"Corrected\" 스탬프 추가.
+
+### 5.2 Severity
+
+| 등급 | 정의 | 오픈 영향 | icon |
+|---|---|---|:---:|
+| Blocker | 핵심 기능 동작 불가 | NO-GO | 🚫 |
+| Major | 데이터·보안·핵심 UX 결함 | GO with hotfix | ⚠️ |
+| Minor | UI/문구/엣지 | GO (post-launch) | 📋 |
+| Info | 결함 X, 정정·관찰 | — | 📝 |
+| Security | 정보 누설 / 권한 | 우선순위 격상 | 🚨 |
+
+### 5.3 Template
+
+```markdown
+### <icon> F-XXX — <한 줄 제목>
+
+| 항목 | 내용 |
+| 등급 | Blocker/Major/Minor/Info/Security |
+| 발견 | YYYY-MM-DD HH:MM (KST) |
+| 영향 | 한 줄 |
+| 증상 | 관찰된 화면/응답 |
+| 근본 원인 | 외부 관측 / 코드 인용 (단정 X 시 \"추정\" 명시) |
+| 위치 | 파일 경로 또는 URL |
+| 권장 조치 | 구체 명령 또는 패치 방향 |
+
+#### 재현
+1. ...
+```
+
+### 5.4 Progress board
+
+| 기호 | 의미 |
+|:---:|---|
+| ⬜ | Pending |
+| 🟡 | In-progress / Partial |
+| ✅ | Pass |
+| ❌ | Fail |
+| ⏭️ | Skipped (out-of-scope) |
+| ⏸️ | Blocked (external) |
+
+## 6. Guards (when WRITE risk exists)
+
+| 가드 | 위치 | 역할 |
+|---|---|---|
+| SELECT-only DB | `tmp/db-select.sh` | DDL/DML 정규식 차단 + `BEGIN READ ONLY` 래핑 |
+| HTTP method block | execution loop Step D | `POST/PUT/PATCH/DELETE` 발견 시 즉시 중단 |
+| Connection env | `tmp/.<svc>.env` | gitignored, `chmod 600` |
+| 룰 등록 | `<scope>-only-<resource>.mdc` | 가드별 별도 mdc 룰 작성 |
+
+## 7. 🚨 Halt triggers (불가침, 세션마다 새 승인)
+
+다음 중 하나 → 즉시 모든 자동화 중단 → 사용자 보고 → 명시 승인 대기:
+
+1. SELECT 가드 우회 시도 (heredoc / multi-statement / 부수효과 함수)
+2. 비의도 `POST/PUT/PATCH/DELETE` 자동 트리거
+3. PII 대량 노출 페이지 진입 (회원 일괄 다운로드 등) — 캡처 X, F-XXX 즉시
+4. HTTP 5xx 또는 P2021/P2025 다발 → DB/백엔드 회귀 가능성
+5. 콘솔에 `secret/token/password/신용정보` 평문 노출
+6. 자격증명 평문이 채팅·문서·터미널 로그에 기록됨
+
+## 8. PII handling
+
+| 데이터 | 마스킹 |
+|---|---|
+| 이름 | `홍길*`, `김민*` |
+| 이메일 | `j***@n***.com` |
+| 휴대폰 | `010-****-1234` (뒤 4자리만) |
+| 생년월일 | `1981-**-**` |
+| 주민번호 | 캡처 절대 X |
+| 회원번호 / 자료ID | 그대로 OK |
+
+본문 인용은 **샘플 최대 3건**. 대량 결과는 `evidence/` 별도 저장 (마스킹 후).
+
+## 9. Round teardown (순서 고정)
+
+1. 회원/관리자 세션 로그아웃
+2. `browser_lock action:unlock` (라운드 1회)
+3. `05_findings_log.md` 진행 보드 + 결론 갱신
+4. `00_plan_and_toc.md` 산출물 표 ✅/⏸️/⏭️ 갱신
+5. 신규 결함 ID 사용자 요약에 노출 (`F-00X (등급) 한 줄`)
+6. 다음 라운드 prerequisite 명시
+7. 자격증명 rotation 권고
+
+## 10. Cross-round linkage
+
+| 케이스 | 처리 |
+|---|---|
+| 동일 시스템 R1→R2→R3 | 같은 디렉터리 누적, 헤더 `Round: R<n>` 으로 분리 |
+| 주제 전환 | 새 디렉터리 + `00_plan_and_toc.md §6 cross-references` 양방향 링크 |
+| 정정 발생 | 원 결함 \"상태\"만 변경, 본문은 `§부록 — 원본 보존` 으로 이동 |
+
+## 11. User reporting (라운드 종료 응답 4섹션 고정)
+
+1. **Constitution block** (§2.1)
+2. **결과 보드** (시나리오별 ✅/⏸️/⏭️)
+3. **발견 결함** (`F-XXX (등급) 한 줄` × N)
+4. **다음 단계 결정** (`AskQuestion` 옵션)
+
+## 12. Meta
+
+- 본 룰 수정 → 사용자 명시 승인 + my-ai-rules SSOT 에서만 편집
+- §7 6개 트리거 → 세션마다 재승인 (1회 승인 X)
+- 가드 우회 시도 발견 → 본 룰 우선 적용 후 다른 룰 검토
+- Reference 라운드: ntnm core-function-check (`my-ai-study/.project/2026-05-24_ntnm-core-function-check/`)

@@ -1,0 +1,81 @@
+---
+description: SELECT-only DB access guard for read-only test sessions. Forbids DDL/DML/DCL. Pairs with tmp/db-select.sh (regex pre-check + BEGIN READ ONLY wrapping). Companion to test-operation-pattern §6.
+alwaysApply: false
+globs:
+  - "tmp/db-*.sh"
+  - "tmp/db-*.js"
+  - "tmp/db-*.ts"
+  - "tmp/sql/**/*.sql"
+---
+
+# SELECT-only DB Guard (읽기전용 DB 세션 가드)
+
+사용자가 \"SELECT 만\" 또는 \"읽기전용 / read-only / no write / 데이터 변경 X\" 라고 명시한 세션에 적용. WRITE 권한을 외부에서 가지더라도 자체 차단.
+
+## 1. 절대 금지 (대소문자 무관)
+
+| 카테고리 | 키워드 |
+|---|---|
+| DDL | `CREATE` `ALTER` `DROP` `TRUNCATE` `RENAME` `COMMENT ON` |
+| DML write | `INSERT` `UPDATE` `DELETE` `MERGE` `UPSERT` `REPLACE` |
+| DCL | `GRANT` `REVOKE` |
+| 부수효과 함수 | `pg_advisory_lock` `pg_terminate_backend` `setval` `nextval` `CALL <proc>` |
+| TCL writes | `BEGIN`+(write) → `COMMIT` |
+| 임시 객체 | `CREATE TEMP` `CREATE TEMPORARY` |
+| 시스템 변경 | `SET ROLE` `RESET` `LOCK TABLE` `VACUUM` `ANALYZE` `REINDEX` `CLUSTER` |
+| 위험 메타 | `COPY` (file write 가능), `EXECUTE` `PREPARE` `DEALLOCATE` `DO` |
+
+## 2. 허용
+
+- `SELECT ...` (subquery / JOIN / CTE 포함)
+- `WITH <cte> AS (SELECT ...) SELECT ...`
+- psql 메타 (read-only): `\dt` `\d <t>` `\du` `\l`
+- 권장 래핑: `BEGIN READ ONLY; SELECT ...; ROLLBACK;`
+- `EXPLAIN SELECT ...` 가능, **`EXPLAIN ANALYZE` 는 금지** (실제 실행)
+
+## 3. Connection security
+
+| 항목 | 규칙 |
+|---|---|
+| 자격증명 | `tmp/.db.env` (gitignored, `chmod 600`) — 평문 문서 X |
+| 사용자 | 가능하면 read-only role, 없으면 일반 user + 트랜잭션 격리 |
+| 세션 시작 | `BEGIN READ ONLY;` 강제 |
+| 격리 수준 | `READ COMMITTED` 이상 (PostgreSQL 기본) |
+
+## 4. Output handling
+
+- PII (이름·전화·이메일·주민번호 등) → 본문 샘플 최대 3건, **마스킹 적용** (`xxx@xxx`, `010-****-****`, `홍길*`)
+- 회원ID / 자료ID 같은 식별자 → 그대로 OK
+- 모든 SELECT 결과 → `.project/<task>/evidence/db-select-<topic>-<timestamp>.txt` 저장 (PII 마스킹 후)
+- 화면 캡처에 PII 보이면 캡처 전 마스킹
+
+## 5. Tooling guards
+
+`tmp/db-select.sh` (어시스턴트가 라운드 시작 시 자동 작성):
+
+- 입력 SQL 정규식 사전 검사 → §1 키워드 발견 시 거부 후 종료
+- `BEGIN READ ONLY; <SQL> ROLLBACK;` 래핑
+- `EVIDENCE_DIR` 환경변수 set 시 자동 evidence 저장 + SHA-1 + timestamp
+- macOS 기본 path: `/usr/local/opt/libpq/bin/psql` 또는 `/opt/homebrew/opt/libpq/bin/psql` 자동 탐색
+
+어시스턴트는 가드를 우회하는 어떤 형태(`psql -c \"DELETE...\"`, heredoc, multi-statement) 로도 호출 X.
+
+## 6. Violation handling
+
+위반 위험 감지 → 즉시 중단 → 사용자 보고 → 명시 승인 전 진행 X.
+사용자가 \"이 한 건만 WRITE 허용\" 같은 명시 승인을 줘도, 본 룰은 해제 키워드(§7) 없이는 계속 적용.
+
+## 7. Scope end
+
+다음 중 하나로 본 룰 해제:
+
+- 사용자가 명시: \"SELECT only 종료\", \"WRITE 허용\", \"가드 해제\"
+- 라운드 종료 + 새 라운드 진입 시 (Constitution block 의 SCOPE 가 변경)
+- 세션 종료
+
+해제 시 `tmp/db-select.sh` 와 `tmp/.db.env` 는 그대로 유지 (재사용 가능). 단 자격증명 rotation 권고.
+
+## 8. Reference
+
+- 페어 룰: `test-operation-pattern.mdc §6 Guards`
+- 최초 적용 라운드: ntnm core-function-check R2 (`my-ai-study/.project/2026-05-24_ntnm-core-function-check/`)
