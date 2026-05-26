@@ -1,0 +1,67 @@
+---
+description: GitHub 이슈 URL·#N 작업 시 적용할 통합 워크플로 (디렉터리·캡처·RCA·PR). 이슈 링크만 줘도 이 규칙부터 따른다.
+alwaysApply: true
+---
+
+# GitHub Issue Workflow (Entry Point)
+
+사용자가 **GitHub 이슈 URL**, **`#N`**, **「이슈 작업해줘」** 를 주면 아래 순서를 따른다. 개별 `github-issue-*.mdc` 를 사용자가 @ 로 명시하지 않아도 적용한다.
+
+## 트리거
+
+- `https://github.com/{owner}/{repo}/issues/{N}`
+- `#637`, `issue 637`, `이슈 637 작업`
+- 브랜치 `fix/637-*`, `feat/637-*`
+
+## 규칙 읽기 순서
+
+| 순서 | 규칙 | 용도 |
+|------|------|------|
+| 1 | **본 문서** | 전체 흐름 |
+| 2 | `github-issue-evidence` | `issues/{N}/` + Before/After 브라우저 캡처 |
+| 3 | `github-issue-tracking` | RCA·브랜치·커밋·PR·staging·close |
+| 4 | `github-issue-authoring` | 코멘트·우선순위·템플릿 |
+| 5 | `github-issue-root-cause-grouping` | 동일 원인 다중 이슈 시에만 |
+
+## 표준 흐름
+
+```
+0. issues/{N}/ 생성 + README.md          ← evidence (코드 수정 전)
+1. gh issue view {N}
+2. Before 캡처 (cursor-ide-browser)      ← evidence, AS-IS
+3. RCA 코멘트 (gh issue comment)
+4. git checkout dev && git checkout -b fix/{N}-{slug}
+5. 코드 수정 (최소 범위)
+6. After 캡처 (동일 시나리오)             ← evidence, TO-BE
+7. README Evidence 테이블 갱신
+8. 커밋 (Fixes #{N}) + PR (증거 경로 포함)
+9. 머지 후 staging 검증 → 결과 코멘트
+```
+
+## 단계별 체크리스트
+
+- [ ] `issues/{N}/before/`, `after/`, `README.md` 생성
+- [ ] UI 이슈: Before 스크린샷 ≥1
+- [ ] RCA 코멘트 게시
+- [ ] `fix|feat/{N}-{slug}` 브랜치 (`dev` 기준)
+- [ ] UI 이슈: After 스크린샷 ≥1 (slug 일치)
+- [ ] PR에 `issues/{N}/` 경로·`Fixes #{N}`
+- [ ] 미검증 close 금지
+
+## 레포별 SSOT
+
+| 레포 | 이슈 증거 경로 | 스테이징 URL |
+|------|----------------|--------------|
+| `ntnm` | `issues/{N}/` | `https://ntnm-staging.duckdns.org` |
+| `my-jira` | `issues/{N}/` | (해당 없으면 로컬만) |
+| 기타 | `issues/{N}/` | `gh` / README 확인 |
+
+## ntnm 에이전트 스킬
+
+`ntnm` 작업 시 `.agents/skills/github-issue-expert/SKILL.md` — 이슈·PR **이중언어** 본문.
+
+## 제약
+
+- × evidence 없이 UI 이슈 close
+- × `my-ai-rules/issues/` 에 제품 증거 저장 (제품 레포 `issues/{N}/` 사용)
+- ✓ `auto-commit-push`: `my-ai-rules` 변경만 자동 push; `ntnm` 은 사용자 요청 시 커밋

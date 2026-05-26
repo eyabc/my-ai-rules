@@ -21,19 +21,27 @@ alwaysApply: true
 
 ## Issue-to-PR 전체 흐름
 
+`github-issue-workflow` · `github-issue-evidence` 참조.
+
 ```
-이슈 확인 → RCA 코멘트 → 브랜치 생성 → 수정 → 커밋 → PR → 머지
+issues/{N}/ 생성 → Before 캡처 → 이슈 확인 → RCA → 브랜치 → 수정 → After 캡처 → 커밋 → PR → 머지 → staging
 ```
 
 | 단계 | 명령 | 비고 |
 |---|---|---|
+| 0. 작업 디렉터리 | `mkdir -p issues/{N}/{before,after}` + `README.md` | **코드 수정 전**. `github-issue-evidence` |
+| 0b. Before 캡처 | cursor-ide-browser → `issues/{N}/before/{slug}.png` | UI/스테이징 이슈 필수 |
 | 1. 이슈 확인 | `gh issue view {N} --json title,body,state,labels` | 상태·라벨 파악 |
 | 2. RCA 코멘트 | `gh issue comment {N} -b "### RCA\n..."` | 근본 원인 + 수정 계획 |
 | 3. 브랜치 생성 | `git checkout dev && git checkout -b fix/{N}-{slug}` | dev 기준. 네이밍: `fix/` `feat/` `refactor/` |
 | 4. 코드 수정 | — | 최소 범위 변경 |
-| 5. 커밋 | `git commit -m "fix(...): ... \n\nFixes #{N}"` | footer에 이슈 키워드 필수 |
-| 6. PR 생성 | `gh pr create --base dev` | body에 `Fixes #{N}` → 머지 시 자동 close |
+| 4b. After 캡처 | `issues/{N}/after/{slug}.png` | Before와 동일 시나리오·slug |
+| 5. 커밋 | `git commit -m "fix(...): ... \n\nFixes #{N}"` | `issues/{N}/` 포함 권장 |
+| 6. PR 생성 | `gh pr create --base dev` | body: `Fixes #{N}` + Evidence 경로 |
 | 7. 머지 | `gh pr merge {PR} --squash --auto --delete-branch` | CI 통과 후 자동 머지 |
+| 8. CI/CD 대기 | 7분 대기 후 `gh run list --branch dev --limit 3` | Deploy 성공 확인 |
+| 9. Staging 검증 | API/브라우저 + 필요 시 추가 after 캡처 | staging URL |
+| 10. 결과 코멘트 | Staging 검증 템플릿 + `issues/{N}/` 경로 | Before/After 링크 |
 
 ## 작성 원칙
 
@@ -107,12 +115,52 @@ gh pr merge {PR} --squash --auto --delete-branch
 - `--auto`: CI 통과 후 자동 머지
 - `--delete-branch`: 머지 후 브랜치 자동 삭제
 
+## 머지 후 Staging 검증 (Post-merge Verification)
+
+dev 머지 → CI/CD 배포 → staging 테스트 → 결과 코멘트 순으로 진행한다.
+
+### 절차
+
+```
+1) 머지 완료 확인
+2) CI/CD 배포 대기 (약 7분)
+   - `gh run list --branch dev --limit 3` 으로 Deploy 상태 확인
+   - status: completed + conclusion: success 될 때까지 대기
+3) Staging 테스트 실행
+   - API: curl 로 수정된 엔드포인트 호출 (다양한 입력값)
+   - UI: 브라우저에서 해당 기능 동작 확인
+4) 이슈에 결과 코멘트 작성 (Staging 검증 결과 템플릿 사용)
+5) 테스트 통과 시 이슈 close 확인 (PR `Fixes` 키워드로 자동 close)
+```
+
+### CI/CD 대기 방법
+
+```bash
+# 머지 직후 → 7분 대기 후 상태 확인
+sleep 420 && gh run list --branch dev --limit 3
+
+# 또는 주기적 폴링 (1분 간격, 최대 10회)
+for i in $(seq 1 10); do
+  STATUS=$(gh run list --branch dev --limit 1 --json status,conclusion -q '.[0].conclusion')
+  [ "$STATUS" = "success" ] && echo "DEPLOYED" && break
+  echo "waiting... ($i/10)"; sleep 60
+done
+```
+
+### 테스트 실패 시
+
+- 이슈에 실패 코멘트 작성 (에러 로그/스크린샷 첨부)
+- 이슈 re-open: `gh issue reopen {N}`
+- 핫픽스 브랜치 생성: `fix/{N}-hotfix-{slug}`
+
 ## 제약
 
 - ✓ 현재 git 레포 기준
 - ✓ 단순 트래킹 → 사용자 승인 없이 자동 실행
 - ✓ commit/close 전 `gh issue view {N}` 존재 확인
 - ✓ PR 생성 전 RCA 코멘트 (버그 이슈 시)
+- ✓ UI 이슈: `issues/{N}/before` + `after` (`github-issue-evidence`)
 - × 민감 정보 → `confidentiality` rule 적용 후 기록
 - × 본문에 전체 코드 (경로/요약만)
 - × 미검증 close
+- × Before/After 없이 UI 이슈 close

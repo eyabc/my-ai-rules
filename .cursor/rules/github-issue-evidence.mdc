@@ -1,0 +1,155 @@
+---
+description: GitHub 이슈별 작업 디렉터리 + cursor-ide-browser Before/After 스크린샷 증거 저장 (UI/스테이징 검증 필수)
+alwaysApply: true
+---
+
+# GitHub Issue Evidence Workspace
+
+이슈 URL·`#N`·「이슈 작업」 요청 시 **코드 수정 전**에 작업 디렉터리를 만들고, **cursor-ide-browser** 로 Before/After 캡처를 저장한다.
+
+## 디렉터리 (현재 Git 레포 루트 기준)
+
+```
+issues/{N}/
+  README.md              # 메타·재현 절차·증거 인덱스 (필수)
+  before/                # 수정 적용 **전** 캡처
+    {slug}.png
+  after/                 # 수정 적용 **후** 캡처 (동일 slug·동일 시나리오)
+    {slug}.png
+  notes.md               # 선택: Fact table, API curl 결과
+```
+
+| 항목 | 규칙 |
+|------|------|
+| `{N}` | GitHub 이슈 번호 (`637`) |
+| `{slug}` | kebab-case, 3~40자 (`login-invalid-credentials`) |
+| 레포 | **작업 중인 레포** 루트 (`ntnm`, `my-jira` 등). `my-ai-rules`가 아님 |
+| 커밋 | UI/UX 이슈는 `issues/{N}/` 를 PR에 **포함** (리뷰·이슈 close 증거) |
+| API-only | `before/`·`after/` 대신 `notes.md`에 curl 출력; UI 없으면 스크린샷 생략 가능 |
+| 민감정보 | 스크린샷·notes에 토큰·비밀번호·PII 마스킹 |
+
+### 그룹 이슈 (동일 근본 원인)
+
+Primary 이슈 번호 디렉터리 하나만 사용:
+
+```
+issues/{primary-N}/
+  group.md               # 관련 #637, #579 목록
+  before/{related-N}-{slug}.png
+  after/{related-N}-{slug}.png
+```
+
+## README.md 템플릿 (생성 직후 작성)
+
+```markdown
+# Issue #{N}
+
+- **Title**: {title}
+- **URL**: https://github.com/{owner}/{repo}/issues/{N}
+- **Branch**: {branch}
+- **Started**: {YYYY-MM-DD HH:mm KST}
+
+## Repro
+
+1. {step}
+2. {step}
+
+## Evidence
+
+| When | File | URL | Notes |
+|------|------|-----|-------|
+| before | `before/{slug}.png` | `{page URL}` | AS-IS |
+| after | `after/{slug}.png` | `{page URL}` | TO-BE |
+
+## Commits / PR
+
+- PR: {link when exists}
+```
+
+## 초기화 (코드 수정 **전** 필수)
+
+```bash
+N=637
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+ISSUE_DIR="${REPO_ROOT}/issues/${N}"
+mkdir -p "${ISSUE_DIR}/before" "${ISSUE_DIR}/after"
+gh issue view "${N}" --json title,body,url,labels -q '.' > "${ISSUE_DIR}/issue.json"
+# README.md 는 에이전트가 위 템플릿으로 작성
+```
+
+## cursor-ide-browser 캡처 절차
+
+MCP 서버: **cursor-ide-browser** (`CallMcpTool` / `browser_*`).
+
+### 공통 순서
+
+```
+browser_navigate → browser_lock → (재현 동작) → browser_snapshot(확인) → browser_take_screenshot → browser_unlock
+```
+
+- `browser_navigate` **후** `browser_lock` (탭 없으면 navigate 먼저)
+- 구조 변경·클릭·입력 후 다음 동작 전 `browser_snapshot`
+- 스크린샷 직전 증상이 보이도록 스크롤: `browser_scroll` + `scrollIntoView: true`
+
+### Before (AS-IS) — **코드·브랜치 수정 전**
+
+1. `issues/{N}/before/` 존재 확인
+2. 대상 URL 접속 (우선순위):
+   - 로컬: `http://localhost:3000/{locale}/...` (frontend 기동 확인)
+   - 스테이징: 레포 SSOT URL (예: `https://ntnm-staging.duckdns.org`)
+3. 이슈 본문의 재현 절차 그대로 수행
+4. 스크린샷 저장:
+
+```
+browser_take_screenshot
+  filename: "{REPO_ROOT}/issues/{N}/before/{slug}.png"
+  fullPage: false   # 증상 영역이 보이면 viewport만; 전체 페이지 필요 시 true
+```
+
+### After (TO-BE) — **수정·로컬/스테이징 반영 후**
+
+1. 수정 반영 서버 재기동·핫리로드 확인
+2. **Before와 동일 URL·동일 입력·동일 클릭 순서**
+3. `issues/{N}/after/{slug}.png` — **slug 파일명은 before와 동일**
+
+### 로컬이 불가할 때
+
+- 스테이징 Before → PR 머지·배포 대기 → 스테이징 After
+- `README.md`에 환경·커밋 SHA·배포 시각 기록
+
+## 이슈·PR·코멘트 연동
+
+### PR body
+
+```markdown
+## Evidence (Issue #{N})
+
+| | Screenshot |
+|--|--|
+| Before | `issues/{N}/before/{slug}.png` |
+| After | `issues/{N}/after/{slug}.png` |
+```
+
+### GitHub 이슈 코멘트
+
+- 상대 경로: ``issues/{N}/before/...`` (PR 머지 후 main/dev에서 열람)
+- 원격 미리보기 필요 시: PR에 포함된 경로 링크 또는 `gh api` Contents API 업로드 (`github-issue-authoring` §증거)
+
+### Close 금지 조건
+
+- UI 변경인데 `before/` 또는 `after/` 가 비어 있음
+- Before/After 시나리오·URL·locale 불일치
+
+## QA 자동화와의 관계
+
+- Playwright 스크린샷 → `qa-automation/test-results/` (기존 유지)
+- **이슈 수동·에이전트 증거** → `issues/{N}/` (본 규칙)
+- 동일 시나리오면 Playwright 캡처를 `issues/{N}/after/`로 **복사** 가능
+
+## 제약
+
+- × 스크린샷만 찍고 디렉터리·README 없이 진행
+- × After만 있고 Before 없음 (신규 UI 제외)
+- × `tmp/` 에만 저장 후 이슈 close (PR 추적 불가)
+- ✓ API-only 이슈는 `notes.md` + curl로 대체
+- ✓ `confidentiality` rule — 계정·토큰 노출 금지

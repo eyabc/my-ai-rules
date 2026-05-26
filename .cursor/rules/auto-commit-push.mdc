@@ -11,7 +11,7 @@ alwaysApply: true
 | `my-jira/` | 변경 즉시 commit & push + GitHub 이슈 자동 발행/연동 |
 | 그 외 (`ntnm`, `my-ai-study`, ...) | 사용자 요청 시에만 |
 
-이슈 키워드(`Closes` / `Fixes` / `Refs #N`) → `github-issue-tracking` rule 참조.
+이슈 작업 흐름 → `github-issue-workflow` (진입) · `github-issue-evidence` (캡처) · `github-issue-tracking` (키워드·PR).
 
 ## my-jira 자동화 상세
 
