@@ -1,0 +1,2 @@
+# Machine-local paths and collection registry (keep on disk; symlink via setup-user-rules.sh)
+.cursor/rules/qmd-usage.mdc

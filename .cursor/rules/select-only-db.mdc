@@ -78,4 +78,4 @@ globs:
 ## 8. Reference
 
 - 페어 룰: `test-operation-pattern.mdc §6 Guards`
-- 최초 적용 라운드: ntnm core-function-check R2 (`my-ai-study/.project/2026-05-24_ntnm-core-function-check/`)
+- 최초 적용 라운드: 제품 레포 core-function-check R2 (예: `my-ai-study/.project/YYYY-MM-DD_*-core-function-check/`)

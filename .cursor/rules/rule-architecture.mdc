@@ -22,6 +22,12 @@ alwaysApply: true
 - ✓ 보안·기밀성·언어 정책
 - ✓ 메타 룰(룰 작성법, 학습 아카이브 등)
 
+### Universal에 넣지 말 것 (기밀·인프라)
+
+- × 스테이징·프로덕션·내부 서비스 **호스트명·FQDN·배포 URL** (예: `*.duckdns.org`, 사설 DNS)
+- × SSH 접속 대상(`user@host`), VPN/방화벽 뒤 엔드포인트
+- → 해당 정보는 **`{repo}/.cursor/rules/`** (예: `deployment-urls.mdc`) 또는 레포 `1prd.md` / README에만 둔다
+
 ### Repo-specific로 둘 것
 
 - ✓ 그 레포의 도메인 모델·스키마(`data/issues/*.json`, `forest_term`, `MJ-*` 키 형식 등)

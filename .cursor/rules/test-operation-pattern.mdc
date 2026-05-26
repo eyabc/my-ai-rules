@@ -196,4 +196,4 @@ User Rule 6 (\"MCP 사용 전 사용자에게 어떤 서버 쓸지 묻기\") 준
 - 본 룰 수정 → 사용자 명시 승인 + my-ai-rules SSOT 에서만 편집
 - §7 6개 트리거 → 세션마다 재승인 (1회 승인 X)
 - 가드 우회 시도 발견 → 본 룰 우선 적용 후 다른 룰 검토
-- Reference 라운드: ntnm core-function-check (`my-ai-study/.project/2026-05-24_ntnm-core-function-check/`)
+- Reference 라운드: 제품 레포 core-function-check (예: `my-ai-study/.project/YYYY-MM-DD_*-core-function-check/`)

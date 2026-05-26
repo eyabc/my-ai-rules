@@ -20,3 +20,8 @@ alwaysApply: true
 - mapping 추가 → 기존 문서도 일괄 치환
 - ✓ 치환: 레포/조직/서비스/개인명/내부 URL/이슈 번호
 - × 유지: OSS명, 기술 표준, 외부 서비스, 공개 보안 정보
+
+## Universal 룰 (`my-ai-rules/.cursor/rules/`)
+
+- 배포·스테이징 **실제 호스트/URL** 은 universal 파일에 적지 않는다 (`rule-architecture.mdc`).
+- 레포 작업 시 URL이 필요하면 해당 레포 `.cursor/rules/` 또는 SSOT 문서를 읽는다.
