@@ -36,9 +36,11 @@ issues/{N}/ 생성 → Before 캡처 → 이슈 확인 → RCA → 브랜치 →
 | 3. 브랜치 생성 | `git checkout dev && git checkout -b fix/{N}-{slug}` | dev 기준. 네이밍: `fix/` `feat/` `refactor/` |
 | 4. 코드 수정 | — | 최소 범위 변경 |
 | 4b. After 캡처 | `issues/{N}/after/{slug}.png` | Before와 동일 시나리오·slug |
-| 5. 커밋 | `git commit -m "fix(...): ... \n\nFixes #{N}"` | `issues/{N}/` 포함 권장 |
-| 6. PR 생성 | `gh pr create --base dev` | body: `Fixes #{N}` + Evidence 경로 |
-| 7. 머지 | `gh pr merge {PR} --squash --auto --delete-branch` | CI 통과 후 자동 머지 |
+| 5. 커밋 | `git commit -m "fix(...): ... \n\nFixes #{N}"` | `issues/{N}/` 포함. **필수** (`auto-commit-push`) |
+| 5b. 푸시 | `git push -u origin HEAD` | PR 전 **필수** |
+| 6. PR 생성 | `gh pr create --base dev` | body: `Fixes #{N}` + Evidence. **필수** |
+| 6b. 이슈 연동 | `gh issue comment {N} -b "PR: {url}\n..."` | PR URL + 증거 경로 |
+| 7. 머지 | `gh pr merge {PR} --squash --auto --delete-branch` | CI 통과 후 (사용자·리뷰 정책 따름) |
 | 8. CI/CD 대기 | 7분 대기 후 `gh run list --branch dev --limit 3` | Deploy 성공 확인 |
 | 9. Staging 검증 | API/브라우저 + 필요 시 추가 after 캡처 | staging URL |
 | 10. 결과 코멘트 | Staging 검증 템플릿 + `issues/{N}/` 경로 | Before/After 링크 |
@@ -153,10 +155,22 @@ done
 - 이슈 re-open: `gh issue reopen {N}`
 - 핫픽스 브랜치 생성: `fix/{N}-hotfix-{slug}`
 
+## 이슈 구현 완료 시 필수 Deliverable
+
+`auto-commit-push` §이슈 Deliverable 과 동일. 요약:
+
+1. `git add` — 이슈·`issues/{N}/` 관련만
+2. `git commit` — footer `Fixes #{N}` (enhancement도 동일; close는 PR merge 시)
+3. `git push -u origin HEAD`
+4. `gh pr create --base dev` — Summary + Evidence + `Fixes #{N}`
+5. `gh issue comment {N}` — PR 링크
+
+× 구현 후 커밋·PR 생략 (명시적 「커밋 금지」 제외)
+
 ## 제약
 
 - ✓ 현재 git 레포 기준
-- ✓ 단순 트래킹 → 사용자 승인 없이 자동 실행
+- ✓ 이슈 구현 완료 → **commit + push + PR** 자동 (`auto-commit-push`)
 - ✓ commit/close 전 `gh issue view {N}` 존재 확인
 - ✓ PR 생성 전 RCA 코멘트 (버그 이슈 시)
 - ✓ UI 이슈: `issues/{N}/before` + `after` (`github-issue-evidence`)
@@ -164,3 +178,4 @@ done
 - × 본문에 전체 코드 (경로/요약만)
 - × 미검증 close
 - × Before/After 없이 UI 이슈 close
+- × PR 없이 이슈 작업 종료

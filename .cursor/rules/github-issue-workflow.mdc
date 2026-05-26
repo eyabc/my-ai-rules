@@ -34,8 +34,9 @@ alwaysApply: true
 5. 코드 수정 (최소 범위)
 6. After 캡처 (동일 시나리오)             ← evidence, TO-BE
 7. README Evidence 테이블 갱신
-8. 커밋 (Fixes #{N}) + PR (증거 경로 포함)
-9. 머지 후 staging 검증 → 결과 코멘트
+8. **커밋 + push + PR** (`auto-commit-push` §이슈 Deliverable) — 사용자 별도 요청 없이 수행
+9. `gh issue comment` — PR 링크 + `issues/{N}/` 증거
+10. (선택) 머지·staging 검증 → 결과 코멘트
 ```
 
 ## 단계별 체크리스트
@@ -45,20 +46,26 @@ alwaysApply: true
 - [ ] RCA 코멘트 게시
 - [ ] `fix|feat/{N}-{slug}` 브랜치 (`dev` 기준)
 - [ ] UI 이슈: After 스크린샷 ≥1 (slug 일치)
-- [ ] PR에 `issues/{N}/` 경로·`Fixes #{N}`
+- [ ] **`git commit` + `git push` + `gh pr create`** (`Fixes #{N}`, evidence 경로)
+- [ ] **이슈 코멘트에 PR URL**
 - [ ] 미검증 close 금지
+
+## Deliverable (구현 완료 = PR까지)
+
+이슈 작업을 “완료”로 보지 않는 경우:
+
+- 코드만 수정하고 커밋·push·PR 없음
+- PR body에 `Fixes #{N}` 누락
+- UI 이슈인데 `issues/{N}/` 증거 없음 (Before/After 또는 notes)
 
 ## 레포별 SSOT
 
-| 레포 | 이슈 증거 경로 | 스테이징 URL |
-|------|----------------|--------------|
-| `ntnm` | `issues/{N}/` | `https://ntnm-staging.duckdns.org` |
-| `my-jira` | `issues/{N}/` | (해당 없으면 로컬만) |
-| 기타 | `issues/{N}/` | `gh` / README 확인 |
-
-## ntnm 에이전트 스킬
-
-`ntnm` 작업 시 `.agents/skills/github-issue-expert/SKILL.md` — 이슈·PR **이중언어** 본문.
+| 항목 | 규칙 |
+|------|------|
+| 이슈 증거 경로 | 작업 중 레포 루트 `issues/{N}/` (공통) |
+| 스테이징·프로덕션 URL | **해당 레포** `.cursor/rules/` 또는 `1prd.md` / README — universal 룰에 호스트명 금지 (`rule-architecture`) |
+| `my-jira` | 스테이징 없으면 로컬만 |
+| 에이전트 스킬 | `{repo}/.agents/skills/` (있으면) — 예: 이슈·PR 이중언어 |
 
 ## 제약
 

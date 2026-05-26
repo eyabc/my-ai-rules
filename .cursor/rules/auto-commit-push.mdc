@@ -9,9 +9,50 @@ alwaysApply: true
 |---|---|
 | `my-ai-rules/` | 변경 즉시 commit & push (conventional commit) |
 | `my-jira/` | 변경 즉시 commit & push + GitHub 이슈 자동 발행/연동 |
-| 그 외 (`ntnm`, `my-ai-study`, ...) | 사용자 요청 시에만 |
+| `ntnm/` 등 제품 레포 | **GitHub 이슈 #{N} 구현 완료** 시 → 아래 [이슈 Deliverable](#이슈-deliverable-필수-커밋--pr) |
+| 그 외 (`my-ai-study`, ...) | 사용자 요청 시에만 |
 
 이슈 작업 흐름 → `github-issue-workflow` (진입) · `github-issue-evidence` (캡처) · `github-issue-tracking` (키워드·PR).
+
+## 이슈 Deliverable (필수: 커밋 + PR)
+
+**트리거** (하나라도 해당 시 응답 종료 **전** 실행):
+
+- 사용자가 이슈 URL·`#N`·「이슈 작업해줘」로 구현을 요청했고 코드 변경이 있음
+- 사용자가 「커밋」「PR」「올려줘」 등 배포·리뷰 요청
+- `fix/{N}-*` / `feat/{N}-*` 브랜치에서 이슈 관련 파일이 staged 가능 상태
+
+**금지**: 구현만 하고 커밋·PR 없이 종료 (사용자가 명시적으로 「커밋하지 마」한 경우만 예외)
+
+### 순서 (반드시 이 순서)
+
+```
+1. git status / diff — 이슈 범위 파일만 stage (민감·무관 파일 제외)
+2. git commit -m "fix(scope): ...\n\nFixes #{N}"   # footer 필수
+3. git push -u origin HEAD
+4. gh pr create --base dev --title "..." --body "...\n\nFixes #{N}"
+5. gh issue comment {N} — PR URL + issues/{N}/ 증거 경로
+```
+
+### PR 본문 필수 블록
+
+```markdown
+## Summary
+- ...
+
+## Evidence (Issue #{N})
+| | Path |
+|--|--|
+| Before | `issues/{N}/before/...` |
+| After | `issues/{N}/after/...` |
+
+Fixes #{N}
+```
+
+### 실패 시
+
+- pre-commit hook 실패 → 수정 후 **새 커밋** (amend 금지, 사용자 규칙 따름)
+- push/PR 실패 → 사용자에게 URL·에러 보고, WIP 코멘트 `Refs #{N}`
 
 ## my-jira 자동화 상세
 
