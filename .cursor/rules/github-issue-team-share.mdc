@@ -1,0 +1,70 @@
+# GitHub Issue Team Share Message
+
+이슈 + PR + 이슈 코멘트(`auto-commit-push` §이슈 Deliverable) 가 끝난 직후, 응답 마지막에 **팀 공유용 영어 메시지**를 별도 코드 블록으로 출력한다. 사용자가 Slack / 메신저로 팀원에게 그대로 복사 붙여넣어 공유할 수 있어야 한다.
+
+## 트리거
+
+다음 조건이 **모두** 충족되면 출력:
+
+- `auto-commit-push` §이슈 Deliverable 의 5 단계 (커밋 + push + PR + 이슈 코멘트) 가 방금 끝났다.
+- 이슈 번호 `#N` 과 PR URL 이 확정되어 있다.
+- 사용자가 「커밋만 / PR만 / 메시지 생략」 처럼 명시적으로 공유 메시지를 빼라고 한 경우는 아니다.
+
+## 출력 시점
+
+- 응답 본문의 **맨 마지막** 섹션에 한 번만 출력. 중간에 끼워 넣지 않는다.
+- `## Team share message` 헤더 + 단일 영어 ` ``` ` 코드 블록 형태.
+- 코드 블록 안에는 마크다운 링크가 아닌 **bare URL** 만 둔다 (메신저 호환).
+
+## 메시지 템플릿
+
+```
+Hi. @{audience} Please see my update on issue {ISSUE_URL}
+and checking the AS-IS and TO-BE from the images.
+
+I modified: {one-line summary of what changed}.
+
+you can find the code revision and origin image from this PR. Thanks!
+{PR_FILES_DIFF_URL}
+
+I need your confirmation since I haven't seen the design and plan document.
+Please confirm this improvement before I merge to dev branch. Thanks!
+```
+
+### 토큰 치환 규칙
+
+| 토큰 | 값 |
+|---|---|
+| `{audience}` | 기본값 `모두`. 사용자가 특정 인물 지정 시 그 핸들 (예: `@designer`). |
+| `{ISSUE_URL}` | `https://github.com/{owner}/{repo}/issues/{N}` — 추측 금지, `gh issue view {N} --json url -q .url` 로 확인. |
+| `{one-line summary of what changed}` | 1–2 문장 영어. 사용자가 본 PR 의 비즈니스 임팩트를 한눈에 알 수 있게. 파일 경로 나열 ×, 추상 기능 영역 + 효과 ✓. 예: `removed English headers / raw status enums from KR admin reservation screens; PENDING now renders as "예약 대기", and modal columns use single Korean labels`. |
+| `{PR_FILES_DIFF_URL}` | `https://github.com/{owner}/{repo}/pull/{PR}/files#diff-{SHA256}` 형식. `{SHA256}` = **PR 변경 파일 중 가장 핵심인 1 개 경로** 의 SHA-256 (lowercase hex). 산출식: `printf '{relative-path}' \| shasum -a 256` (워크스페이스 루트 기준 상대 경로, 끝에 개행 없음). 핵심 파일 판단 기준: ① 비즈니스 로직 / UI 변경이 가장 큰 파일, ② 머지 전 리뷰어가 가장 먼저 봐야 할 파일. 핵심 파일이 불분명하면 `/files` 까지만 (anchor 생략). |
+
+### one-line summary 작성 가이드
+
+- ✓ 행동 동사로 시작 (`removed`, `added`, `fixed`, `unified`, `migrated`).
+- ✓ "어디서 / 무엇을 / 결과" 순서.
+- ✓ 한국어 UI 문자열은 큰따옴표로 감싸 영어 문장 안에 두기 가능 (`now renders as "예약 대기"`).
+- × `i18n regression`, `hardcoded` 같은 추상어만 나열 ×.
+- × 파일 경로 / 함수명 ×.
+- × `Closes #N` 같은 키워드 ×.
+
+## 다국어 / 팀 정책 예외
+
+- 팀이 한국어 우선이라도 본 메시지는 **영어 고정**. 코드/UI 문자열만 한국어 허용.
+- 사용자가 `audience` 를 명시하지 않으면 `@모두` 유지.
+- 사용자가 직접 메시지를 보낸다 → 본 규칙은 메시지 **생성만**, 자동 전송 ×.
+
+## 안티패턴
+
+- × 코드 블록 안에 markdown 링크 (`[text](url)`) 삽입.
+- × `{ISSUE_URL}` / `{PR_FILES_DIFF_URL}` 같은 placeholder 미치환 출력.
+- × diff anchor SHA-256 을 추측 / 임의값 사용 (반드시 `shasum` 실행).
+- × 메시지에 토큰·이메일·내부 호스트명 노출 (`confidentiality.mdc`, `security.mdc`).
+- × 한 응답에 동일 메시지 2회 출력.
+
+## 관련 룰
+
+- `github-issue-workflow.mdc` — 본 규칙은 그 §표준 흐름의 9 단계 (이슈 코멘트) 직후 **10 단계** 로 동작.
+- `auto-commit-push.mdc` — §이슈 Deliverable 의 5 단계가 끝나는 시점이 본 규칙의 트리거.
+- `github-issue-authoring.mdc` — 본 메시지는 GitHub 코멘트가 아니라 외부 메신저용. 코멘트 본문 포맷과 혼동하지 말 것.

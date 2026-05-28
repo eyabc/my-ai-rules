@@ -22,6 +22,7 @@ alwaysApply: true
 | 3 | `github-issue-tracking` | RCA·브랜치·커밋·PR·staging·close |
 | 4 | `github-issue-authoring` | 코멘트·우선순위·템플릿 |
 | 5 | `github-issue-root-cause-grouping` | 동일 원인 다중 이슈 시에만 |
+| 6 | `github-issue-team-share` | 이슈 + PR 종료 직후 영어 팀 공유 메시지 |
 
 ## 표준 흐름
 
@@ -36,7 +37,8 @@ alwaysApply: true
 7. README Evidence 테이블 갱신
 8. **커밋 + push + PR** (`auto-commit-push` §이슈 Deliverable) — 사용자 별도 요청 없이 수행
 9. `gh issue comment` — PR 링크 + `issues/{N}/` 증거
-10. (선택) 머지·staging 검증 → 결과 코멘트
+10. **팀 공유용 영어 메시지** 출력 (`github-issue-team-share`) — 응답 마지막 코드 블록
+11. (선택) 머지·staging 검증 → 결과 코멘트
 ```
 
 ## 단계별 체크리스트
@@ -48,6 +50,7 @@ alwaysApply: true
 - [ ] UI 이슈: After 스크린샷 ≥1 (slug 일치)
 - [ ] **`git commit` + `git push` + `gh pr create`** (`Fixes #{N}`, evidence 경로)
 - [ ] **이슈 코멘트에 PR URL**
+- [ ] **팀 공유용 영어 메시지** 출력 (`github-issue-team-share`)
 - [ ] 미검증 close 금지
 
 ## Deliverable (구현 완료 = PR까지)
