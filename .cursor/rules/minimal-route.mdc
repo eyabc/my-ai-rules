@@ -1,0 +1,95 @@
+---
+description: 목적 달성까지 최소 경로. 불필요 Grep/Read 제거
+globs: 
+alwaysApply: true
+---
+
+# Minimal Route
+
+목적(Goal)까지 **최소 단계**로 도달. 탐색 → 실행 간 불필요 hit 제거.
+
+## 핵심 원칙
+
+1. **CLI 우선**: 데이터 모델이 CLI로 조회 가능하면 raw JSON `Read`/`Grep` × → CLI `show`/`list`
+2. **범위 최소화**: entity ID가 명확하면 `Grep "ID" across all files` × → 해당 파일/CLI만
+3. **규칙 기반 건너뛰기**: CLI 사용법이 `.cursor/rules/`에 이미 기술돼 있으면 소스코드 재탐색 ×
+4. **전체 Read 금지**: 1000줄+ 파일에서 특정 entity 조회 → CLI `show` 또는 targeted `Grep` (전체 Read ×)
+
+## 판단 플로우
+
+```
+사용자 요청 → 목적 식별
+  ↓
+Q1: CLI로 직접 실행/조회 가능한가?
+  → yes: CLI 실행 (skip Read/Grep)
+  → no: Q2
+  ↓
+Q2: 어떤 파일의 어떤 부분이 필요한지 특정 가능한가?
+  → yes: targeted Read (offset/limit) 또는 narrow Grep
+  → no: broad search (최후 수단)
+```
+
+## 안티패턴 → 수정
+
+| 안티패턴 | 낭비 | 최적 경로 |
+|---|---|---|
+| `Grep "GOAL-7" **/*.json` (전체 워크스페이스) | issues/day-reviews/contacts 불필요 hit | `pnpm agent:goal show GOAL-7` |
+| `Read data/goals.json` (1200줄 전체) | entity 2개만 필요 | CLI `show` 2회 |
+| CLI flag 확인 위해 `scripts/*.ts` 전체 Grep | 100줄+ hit | `.cursor/rules/jira-agent.mdc` §CLI 참조 |
+| `tmp/goal-2-session.json` Read (코드 변경 아닌데) | GOAL-2 룰 오적용 | 데이터 수정 ≠ 코드 수정 → skip |
+| `git log` for citation-provenance (간단 데이터 조작) | 목적 달성과 무관한 2 shell 호출 | 단순 CRUD → citation 표 최소화 |
+
+## 트리거별 최적 경로
+
+### my-jira Goal 조회/수정
+
+```
+1. pnpm agent:goal show <ID>        ← 상태 파악
+2. pnpm agent:goal update <ID> ...  ← 실행
+3. pnpm agent:goal show <ID>        ← 검증
+4. git add + commit + push           ← 완료
+```
+
+× `Read data/goals.json` 전체
+× `Grep GOAL-N` across all JSON
+× `Grep parentId` in source (CLI `--parent` 이미 문서화)
+
+### my-jira Issue 조회/수정
+
+```
+1. pnpm agent:issue show <KEY>      ← 또는 Read data/issues/<KEY>.json (단일 파일)
+2. pnpm agent:issue <command> ...   ← 실행
+3. 검증 + commit
+```
+
+× `pnpm agent:issue list` 전체 (범위 좁히기: `--project`, `--status`, `--labels`)
+× `Grep <KEY>` across workspace
+
+### 구조/관계 질문 (e.g. "A가 B 하위 아닌가?")
+
+```
+1. CLI show A + show B              ← parentId/children 즉시 확인
+2. 판단 (agent 제시)
+3. 사용자 확인 → 실행
+```
+
+× 전체 goals.json Read
+× UI 소스코드 탐색 (parentId 렌더링 방식은 목적과 무관)
+
+## GOAL-2 cursor-work-log 적용 범위 명확화
+
+`goal-2-cursor-work-log.mdc` 트리거:
+- ✓ my-jira **코드/UI** 파일 수정 (`.ts`, `.tsx`, `.css`, `.mdc`)
+- × **data/** JSON만 수정 (Goal/Issue/Timelog CRUD = agent 운영 작업, 코드 변경 아님)
+- × 조회만 (파일 읽기, CLI show/list)
+
+## citation-provenance 간소화 조건
+
+단순 data CRUD (goal update, issue move, timelog add) → citation 표에 `data/*.json`만 1줄. git log 2회 호출 대신 `untracked` 또는 직전 커밋 시각으로 대체 가능.
+
+## 자기 점검 (응답 시작 전)
+
+- [ ] 이 요청을 CLI 직접 실행으로 달성 가능한가? → yes면 탐색 skip
+- [ ] 전체 파일 Read/Grep 대신 targeted 방법이 있는가?
+- [ ] `.cursor/rules/`에 이미 답이 있는 내용을 소스 코드에서 재탐색하고 있지 않은가?
+- [ ] GOAL-2 cursor-work-log를 data CRUD에 오적용하고 있지 않은가?
