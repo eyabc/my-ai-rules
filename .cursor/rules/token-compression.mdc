@@ -25,3 +25,9 @@ alwaysApply: false
 1. 작성한 .mdc가 위 기법에 부합하는지 검증
 2. 위반 시 즉시 수정
 3. 작업 중 새 압축 패턴 발견 → 이 파일의 기법 목록에 추가
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-22
+- 출처: LLM 토큰 최적화 기법

@@ -79,3 +79,9 @@ globs:
 
 - 페어 룰: `test-operation-pattern.mdc §6 Guards`
 - 최초 적용 라운드: 제품 레포 core-function-check R2 (예: `my-ai-study/.project/YYYY-MM-DD_*-core-function-check/`)
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-25
+- 출처: DB 안전 접근 패턴 (읽기 전용 트랜잭션 격리)

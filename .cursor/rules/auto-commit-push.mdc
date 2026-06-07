@@ -69,3 +69,9 @@ Fixes #{N}
 - ✓ conventional commit: feat / fix / chore / docs / refactor
 - × force push → 사용자 명시 요청 시에만
 - × 민감 파일 (`.env`, `*.token.json`, credentials) ×
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-22
+- 출처: GitHub 이슈 워크플로우 실무, Conventional Commits

@@ -25,3 +25,9 @@ alwaysApply: true
 
 - 배포·스테이징 **실제 호스트/URL** 은 universal 파일에 적지 않는다 (`rule-architecture.mdc`).
 - 레포 작업 시 URL이 필요하면 해당 레포 `.cursor/rules/` 또는 SSOT 문서를 읽는다.
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-22
+- 출처: PII 보호 정책, 정보 보안 원칙

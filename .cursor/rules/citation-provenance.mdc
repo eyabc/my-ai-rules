@@ -46,3 +46,9 @@ alwaysApply: true
 
 - 인용·근거 제시가 포함된 모든 답변(언어 무관) — 한국어 응답에서도 컬럼명은 영문 유지.
 - `confidentiality.mdc` 와 충돌 시 기밀 정책 우선.
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-25
+- 출처: 문서 추적성(traceability) 원칙

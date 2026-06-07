@@ -75,3 +75,9 @@ alwaysApply: true
 - × evidence 없이 UI 이슈 close
 - × `my-ai-rules/issues/` 에 제품 증거 저장 (제품 레포 `issues/{N}/` 사용)
 - ✓ `auto-commit-push`: `my-ai-rules` 변경만 자동 push; `ntnm` 은 사용자 요청 시 커밋
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-26
+- 출처: Issue-to-PR 통합 워크플로우 (개별 github-issue-*.mdc 규칙 조합)

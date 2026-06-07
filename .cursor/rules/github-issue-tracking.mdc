@@ -179,3 +179,9 @@ done
 - × 미검증 close
 - × Before/After 없이 UI 이슈 close
 - × PR 없이 이슈 작업 종료
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-24
+- 출처: GitHub 이슈 라이프사이클 관리, Conventional Commits

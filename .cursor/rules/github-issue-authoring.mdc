@@ -233,3 +233,9 @@ gh api repos/{owner}/{repo}/contents/issues/{N}/after/{slug}.png --method PUT \
 - ✓ 한·영 병기 권장 (국제 협업 대비)
 - ✓ 코드/경로는 반드시 백틱
 - ✓ 제목은 `[카테고리][심각도] 요약` 형식 권장
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-25
+- 출처: GitHub 이슈 관리 실무, 이중언어 커뮤니케이션 패턴

@@ -86,3 +86,9 @@ alwaysApply: true
 - 사용자 코드에서 secret 발견 → 즉시 경고 + 마스킹 사본 + rotate 안내
 - 신규 외부 패키지 도입 → maintainer / DL / 위험 1줄 요약 제공
 - 위반 발견 → 작업 중단 + 사용자 보고
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-24
+- 출처: OWASP Top 10, Supply Chain Security, Git Security Best Practices

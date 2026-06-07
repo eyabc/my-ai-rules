@@ -24,3 +24,9 @@ my-ai-study/{YYYY-MM-DD}_{topic-kebab-case}/
 - × 제외: 단순 파일 수정, 리팩터링, 커밋/PR 등 실행 작업
 - 작성 직후 → `qmd update -c my-ai-study` 안내 (또는 새벽 04:00 LaunchAgent에 위임). 인덱스 반영 후 `local-search-first`로 재활용 가능
 - 신규 아카이브 전 → `local-search-first`에 따라 `qmd query` 로 동일 주제 존재 여부 먼저 확인
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-22
+- 출처: 개인 지식 관리(PKM) 원칙

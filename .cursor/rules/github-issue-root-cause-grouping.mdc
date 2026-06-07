@@ -64,3 +64,9 @@ When a shared fix changes an interface (API response, event payload, config sche
 - ❌ Closing issues without Before/After evidence
 - ❌ Changing a shared interface without checking all consumers
 - ❌ Creating duplicate fix branches for the same root cause
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-26
+- 출처: 소프트웨어 엔지니어링 RCA(Root Cause Analysis) 패턴

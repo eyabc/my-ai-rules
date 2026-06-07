@@ -68,3 +68,9 @@ Please confirm this improvement before I merge to dev branch. Thanks!
 - `github-issue-workflow.mdc` — 본 규칙은 그 §표준 흐름의 9 단계 (이슈 코멘트) 직후 **10 단계** 로 동작.
 - `auto-commit-push.mdc` — §이슈 Deliverable 의 5 단계가 끝나는 시점이 본 규칙의 트리거.
 - `github-issue-authoring.mdc` — 본 메시지는 GitHub 코멘트가 아니라 외부 메신저용. 코멘트 본문 포맷과 혼동하지 말 것.
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-28
+- 출처: 팀 커뮤니케이션 실무 (Slack/메신저 공유 템플릿)

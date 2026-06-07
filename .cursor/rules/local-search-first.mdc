@@ -55,3 +55,9 @@ alwaysApply: true
 - `qmd-usage.mdc` — qmd 명령·컬렉션 레퍼런스
 - `knowledge-archive.mdc` — 새 학습은 my-ai-study에 기록 → qmd 인덱스 자동 반영
 - `continuous-improvement.mdc` — 반복 패턴 탐지에 qmd 활용
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-25
+- 출처: Search-first 원칙, qmd 통합 검색 패턴

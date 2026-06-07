@@ -168,3 +168,9 @@ browser_take_screenshot
 - × `tmp/` 에만 저장 후 이슈 close (PR 추적 불가)
 - ✓ API-only 이슈는 `notes.md` + curl로 대체
 - ✓ `confidentiality` rule — 계정·토큰 노출 금지
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-26
+- 출처: QA 증거 관리 방법론 (Before/After 캡처)

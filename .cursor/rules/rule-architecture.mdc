@@ -58,3 +58,9 @@ alwaysApply: true
 
 - `my-ai-rules/` 자체의 `.cursor/rules/`는 SSOT이므로 그 자체가 universal 풀.
 - 같은 레포 내 `.cursor/rules/` ↔ `.agents/skills/` 등의 internal 참조는 허용.
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-24
+- 출처: 메타 룰 설계 원칙 (관심사 분리, 결합 방지)

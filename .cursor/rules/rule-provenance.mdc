@@ -1,0 +1,48 @@
+---
+description: .mdc 룰 파일 작성·수정 시 하단 Provenance 섹션 필수
+alwaysApply: true
+---
+
+# Rule Provenance
+
+`.cursor/rules/*.mdc` 파일을 **생성·수정**할 때 파일 하단에 `## Provenance` 섹션을 반드시 포함한다.
+
+## 필수 항목
+
+| 항목 | 설명 |
+|---|---|
+| 작성 | 최초 작성자 (e.g. `AI (Cursor Agent) + eyabc`, `Wonhyuk Chung`) |
+| 생성 | 최초 생성 일자 `YYYY-MM-DD` |
+| 출처 | 규칙의 지적 원천 (도서, 프레임워크 문서, 실무 경험, 팀 컨벤션 등) |
+
+## 포맷 (파일 맨 하단, `---` 구분선 이후)
+
+```
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-05-22
+- 출처: Kaizen 지속 개선 원칙, 프로젝트 실무 경험
+```
+
+## 규칙
+
+- ✓ 신규 `.mdc` 생성 시 반드시 포함
+- ✓ 기존 `.mdc` 수정 시 Provenance 없으면 추가
+- ✓ 출처가 복수면 쉼표 구분 (e.g. `OWASP Top 10, NestJS 공식 문서`)
+- ✓ 도서 출처: `「도서명」 저자` 형식
+- ✓ 외부 문서 출처: 프레임워크·표준명 (e.g. `Conventional Commits`, `OWASP`)
+- × 출처 불명 → `프로젝트 실무 경험` 또는 `팀 컨벤션`으로 표기 (빈칸 금지)
+- × frontmatter(`---` YAML 블록) 안에 넣지 않는다 — 파일 **맨 하단** `## Provenance`
+
+## 적용 범위
+
+- `my-ai-rules/.cursor/rules/*.mdc` (universal)
+- `{repo}/.cursor/rules/*.mdc` (repo-specific)
+- `.agents/rules/*.md`, `.agents/skills/*/SKILL.md` 는 선택
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + eyabc
+- 생성: 2026-06-07
+- 출처: 문서 추적성(traceability) 원칙, citation-provenance.mdc 확장
