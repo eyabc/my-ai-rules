@@ -35,14 +35,46 @@ alwaysApply: true
 - × 출처 불명 → `프로젝트 실무 경험` 또는 `팀 컨벤션`으로 표기 (빈칸 금지)
 - × frontmatter(`---` YAML 블록) 안에 넣지 않는다 — 파일 **맨 하단** `## Provenance`
 
+## AI 생성 콘텐츠 출처 (확장)
+
+AI가 생성·가공한 **콘텐츠 파일**(`.md`, `.mdx` 등)에도 하단에 출처를 명시한다.
+룰 파일(`.mdc`)뿐 아니라 AI가 원본 자료(강의, 도서, 논문 등)를 가공해 만든 모든 문서가 대상.
+
+### 필수 항목 (콘텐츠)
+
+| 항목 | 설명 |
+|---|---|
+| 작성 | AI 모델명 포함 (e.g. `AI (Cursor Agent / Claude) + eyabc`) |
+| 원본 | 가공 전 원본 자료 (강의명·강사·일시, 도서명·저자, 논문 등) |
+| 생성 | 콘텐츠 최초 생성 일자 `YYYY-MM-DD` |
+
+### 포맷 (콘텐츠 파일 맨 하단)
+
+```
+---
+## 출처
+- 작성: AI (Cursor Agent / Claude) + eyabc
+- 원본: 「식물의 이해(초본)」 박은영, 서울숲 현장 수업, 2026-05-02
+- 생성: 2026-06-07
+```
+
+### 규칙 (콘텐츠)
+
+- ✓ AI가 강의 녹음·STT·원고를 가공해 만든 문서 → 원본 강의 정보 필수
+- ✓ AI가 도서·논문을 요약·정리한 문서 → 원본 도서·논문 정보 필수
+- ✓ 작성자에 AI 모델명 명시 (e.g. `Claude`, `GPT-4o`)
+- ✓ 원본이 복수면 쉼표 구분
+- × 원본 없이 AI만 표기 금지 — 가공 전 원천을 반드시 명시
+
 ## 적용 범위
 
 - `my-ai-rules/.cursor/rules/*.mdc` (universal)
 - `{repo}/.cursor/rules/*.mdc` (repo-specific)
+- **AI 생성 콘텐츠** (`site/src/content/**/*.md`, `docs/**/*.md` 등)
 - `.agents/rules/*.md`, `.agents/skills/*/SKILL.md` 는 선택
 
 ---
 ## Provenance
-- 작성: AI (Cursor Agent) + eyabc
+- 작성: AI (Cursor Agent / Claude) + eyabc
 - 생성: 2026-06-07
 - 출처: 문서 추적성(traceability) 원칙, citation-provenance.mdc 확장
