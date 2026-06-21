@@ -15,6 +15,26 @@ my-ai-study/{YYYY-MM-DD}_{topic-kebab-case}/
   {NN}_{subtopic}.md   ← e.g. 01_rebase-vs-merge.md
 ```
 
+## 디렉터리 명명 (tech + work)
+
+slug·폴더명 → **핵심 기술 + 한 업무**가 경로만으로 보이게.
+
+| 레벨 | 패턴 | 예 |
+|---|---|---|
+| 루트 | `{YYYY-MM-DD}_{tech-or-context-kebab}` | `2026-06-21_linux-locked-directory-incident` |
+| 프로젝트 주제 | `{tech}-{work-kebab}/` | `oracle-test-sample-query-tuning/` |
+
+공식: `{primary-tech}-{work-action}[-{scope}]` — kebab-case · 2~4 세그먼트
+
+| × | ✓ |
+|---|---|
+| `regulatory-cdr-test-data` (jargon) | `oracle-test-sample-query-tuning` |
+| `docs`, `misc` | `sqlplus-cli-operations-guide` |
+
+생성 전 3문항: (1) tech 있음? (2) work 있음? (3) 경로만으로 업무 추론?
+
+> `my-ai-study` 전체 SSOT · 포트폴리오 · `meta.json` 연동 → `my-ai-study/.cursor/rules/archive-tags.mdc` §디렉터리 명명
+
 ## 규칙
 
 - 새 주제 → 디렉토리 생성. 동일 주제 존재 시 기존에 추가.
@@ -29,4 +49,4 @@ my-ai-study/{YYYY-MM-DD}_{topic-kebab-case}/
 ## Provenance
 - 작성: AI (Cursor Agent) + eyabc
 - 생성: 2026-05-22
-- 출처: 개인 지식 관리(PKM) 원칙
+- 출처: 개인 지식 관리(PKM) 원칙, my-ai-study archive 디렉터리 tech+work 명명 (2026-06-21)
