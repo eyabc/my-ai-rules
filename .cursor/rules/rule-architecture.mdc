@@ -19,6 +19,7 @@ alwaysApply: true
 ### Universal로 둘 것
 
 - ✓ 어떤 레포에서든 동일하게 적용되는 거동(이슈/커밋/PR 라이프사이클)
+- ✓ application 빌드 검증 (`app-build-verify.mdc` — 코드 변경·push 전)
 - ✓ 보안·기밀성·언어 정책
 - ✓ 메타 룰(룰 작성법, 학습 아카이브 등)
 
