@@ -1,0 +1,97 @@
+---
+description: Application 레포 — 코드 수정·push 전 build 검증 SSOT
+alwaysApply: true
+---
+
+# Application Build Verify
+
+애플리케이션(빌드 스크립트 있는 레포)에서 **코드 변경 후**·**push 직전** `build` 통과를 SSOT로 강제한다.
+
+## Application 판정
+
+| 조건 | Application |
+|---|---|
+| 루트 `package.json` `scripts`에 `build` \| `build:all` \| `compile` 중 하나 | ✓ |
+| 루트 `package.json` 없음 · scripts에 위 키 없음 | × (문서·데이터·룰-only 레포) |
+| monorepo | **git root** `package.json` 기준. 하위 패키지만 변경 시에도 root build 명령 사용 |
+
+레포별 build 명령 오버라이드 → `{repo}/.cursor/rules/` 포인터 (호스트명·URL과 동일 레이어). universal에 레포 고유 명령 하드코딩 ×.
+
+## Build 명령 해석 (우선순위)
+
+```
+1. {repo}/.cursor/rules/` build SSOT 문서 (있으면)
+2. package.json scripts.build     → pnpm run build
+3. scripts.build:all              → pnpm run build:all
+4. scripts.compile                → pnpm run compile
+5. 매칭 0건                       → build 검증 생략 (application 아님)
+```
+
+lockfile: `pnpm-lock.yaml` → `pnpm` · `yarn.lock` → `yarn` · else `npm run <script>`.
+
+## 트리거 (하나라도 해당 → build 실행)
+
+| 시점 | 조건 |
+|---|---|
+| **코드 수정 직후** | 응답 종료 전, 아래 §코드 변경 범위에 해당하는 파일을 저장·수정함 |
+| **commit 직전** | `auto-commit-push` · 이슈 Deliverable · 사용자 「커밋」 요청 |
+| **push 직전** | `git push` · PR 생성 전 push · `auto-commit-push` push 단계 |
+
+× 트리거 아님: 조회·설명만 · `.md`/`.mdc`만 변경 · `data/**/*.json`만 변경(my-jira 운영 데이터) · 사용자 「빌드 스킵」「커밋하지 마」 명시.
+
+## 코드 변경 범위 (build 필수로 보는 경로)
+
+- `src/**` `app/**` `pages/**` `components/**` `lib/**` `scripts/**`(TS/JS 런타임)
+- `*.ts` `*.tsx` `*.js` `*.jsx` `*.py` `*.go` `*.rs`
+- 빌드 설정: `tsconfig*.json` `next.config.*` `nest-cli.json` `postcss.config.json` `.eslintrc.json` `package.json` `pnpm-lock.yaml`
+
+## Agent 절차
+
+```
+1. git rev-parse --show-toplevel → package.json scripts 확인 → build 명령 결정
+2. (코드 변경 턴) 수정 완료 직후 pnpm|yarn|npm run <build> 실행
+3. 실패 → 타입·lint 오류 수정 → build 재실행. push·commit 금지
+4. 성공 → 커밋·push·PR 진행 (다른 룰 순서와 병행)
+5. 응답에 1줄: Build: ✓ `<명령>` (또는 생략 사유)
+```
+
+- build는 **변경 레포 루트**에서 실행 (`working_directory` = git top-level).
+- Next.js 등 1~3분 소요 예상 — `block_until_ms` 여유 확보.
+- ESLint **warning**만 있고 compile success → 통과. **type error / compile fail** → 수정 필수.
+
+## 연동 룰
+
+| 룰 | 삽입 위치 |
+|---|---|
+| `auto-commit-push.mdc` | commit·push **전** build |
+| `security.mdc` §Pre-push | build 통과 확인 |
+| `github-issue-tracking.mdc` | Deliverable — commit 전 build |
+| `github-issue-workflow.mdc` | PR 전 build (push 포함) |
+
+## 실패 시
+
+- push 중단 · 사용자에게 에러 요약 + 수정 파일 경로
+- 이슈 WIP → `gh issue comment` `Refs #{N}` + build 로그 요약
+- × 실패 상태로 push · × 「나중에 CI에서」로 생략
+
+## 자기 점검 (application + 코드 변경 응답 종료 직전)
+
+1. build 스크립트 있는 레포에서 §코드 변경 범위 파일을 건드렸는가?
+2. → 예면 `pnpm run build`(또는 해석된 명령)를 **이번 응답**에서 실행했는가?
+3. push·commit 예정인데 build를 아직 안 돌렸는가? → push 금지, build 먼저
+
+하나라도 × → build 실행·수정 후 종료.
+
+## 제약
+
+- ✓ application + 코드 변경 = build는 선택이 아니라 **필수**
+- ✓ push 전 build 재확인 (이전 턴 통과 후 추가 코드 변경 시 **재실행**)
+- × build 실패 상태로 커밋·push·PR 종료
+- × my-ai-rules / my-ai-study 등 non-app에 build 강제
+- × 레포별 staging URL·시크릿을 universal에 기록 (`rule-architecture.mdc`)
+
+---
+## Provenance
+- 작성: AI (Cursor Agent) + owner-1
+- 생성: 2026-07-14
+- 출처: my-jira `pnpm run build` 타입 오류 배포 실패 피드백, auto-commit-push·security pre-push 갭

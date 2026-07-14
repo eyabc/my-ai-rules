@@ -29,10 +29,12 @@ alwaysApply: true
 
 ## 3. Pre-push
 
+- ✓ **application** + 코드 변경 → `app-build-verify.mdc` build 통과 후 push (`pnpm run build` 등)
 - ✓ `git log -p origin/{br}..HEAD` 재확인
 - ✓ 강제 푸시 → `--force-with-lease` + 사용자 명시 요청
 - ✓ Husky/lefthook hook 비활성화 ×
 - × `main` 직접 푸시 (PR 경유)
+- × build 실패·미실행 상태 push
 
 ## 4. Post-push (사고 대응)
 

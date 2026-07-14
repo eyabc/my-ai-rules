@@ -21,8 +21,9 @@ alwaysApply: true
 | 2 | `github-issue-evidence` | `issues/{N}/` + Before/After 브라우저 캡처 |
 | 3 | `github-issue-tracking` | RCA·브랜치·커밋·PR·staging·close |
 | 4 | `github-issue-authoring` | 코멘트·우선순위·템플릿 |
-| 5 | `github-issue-root-cause-grouping` | 동일 원인 다중 이슈 시에만 |
-| 6 | `github-issue-team-share` | 이슈 + PR 종료 직후 영어 팀 공유 메시지 |
+| 5 | `app-build-verify` | application 코드 변경·push 전 build |
+| 6 | `github-issue-root-cause-grouping` | 동일 원인 다중 이슈 시에만 |
+| 7 | `github-issue-team-share` | 이슈 + PR 종료 직후 영어 팀 공유 메시지 |
 
 ## 표준 흐름
 
@@ -33,6 +34,7 @@ alwaysApply: true
 3. RCA 코멘트 (gh issue comment)
 4. git checkout dev && git checkout -b fix/{N}-{slug}
 5. 코드 수정 (최소 범위)
+5b. app-build-verify — application + 코드 변경 시 build 통과 (commit·push 전)
 6. After 캡처 (동일 시나리오)             ← evidence, TO-BE
 7. README Evidence 테이블 갱신
 8. **커밋 + push + PR** (`auto-commit-push` §이슈 Deliverable) — 사용자 별도 요청 없이 수행
@@ -48,6 +50,7 @@ alwaysApply: true
 - [ ] RCA 코멘트 게시
 - [ ] `fix|feat/{N}-{slug}` 브랜치 (`dev` 기준)
 - [ ] UI 이슈: After 스크린샷 ≥1 (slug 일치)
+- [ ] application + 코드 변경: **build 통과** (`app-build-verify.mdc`)
 - [ ] **`git commit` + `git push` + `gh pr create`** (`Fixes #{N}`, evidence 경로)
 - [ ] **이슈 코멘트에 PR URL**
 - [ ] **팀 공유용 영어 메시지** 출력 (`github-issue-team-share`)

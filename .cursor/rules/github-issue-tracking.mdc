@@ -159,6 +159,7 @@ done
 
 `auto-commit-push` §이슈 Deliverable 과 동일. 요약:
 
+0. **build** — application 레포 + 코드 변경 시 `app-build-verify.mdc` 통과 (commit·push **전**)
 1. `git add` — 이슈·`issues/{N}/` 관련만
 2. `git commit` — footer `Fixes #{N}` (enhancement도 동일; close는 PR merge 시)
 3. `git push -u origin HEAD`

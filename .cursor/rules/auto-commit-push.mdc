@@ -8,8 +8,8 @@ alwaysApply: true
 | 레포 | 동작 |
 |---|---|
 | `my-ai-rules/` | 변경 즉시 commit & push (conventional commit) |
-| `my-jira/` | 변경 즉시 commit & push + GitHub 이슈 자동 발행/연동 |
-| `ntnm/` 등 제품 레포 | **GitHub 이슈 #{N} 구현 완료** 시 → 아래 [이슈 Deliverable](#이슈-deliverable-필수-커밋--pr) |
+| `my-jira/` | 변경 즉시 commit & push + GitHub 이슈 자동 발행/연동. **코드 변경 시 build 필수** (`app-build-verify`) |
+| `ntnm/` 등 제품 레포 | **GitHub 이슈 #{N} 구현 완료** 시 → 아래 [이슈 Deliverable](#이슈-deliverable-필수-커밋--pr). 코드 변경·push 전 **build 필수** (`app-build-verify`) |
 | 그 외 (`my-ai-study`, ...) | 사용자 요청 시에만 |
 
 이슈 작업 흐름 → `github-issue-workflow` (진입) · `github-issue-evidence` (캡처) · `github-issue-tracking` (키워드·PR).
@@ -27,6 +27,7 @@ alwaysApply: true
 ### 순서 (반드시 이 순서)
 
 ```
+0. app-build-verify — application + 코드 변경 시 `pnpm run build`(또는 SSOT 명령) 통과. × 실패 시 push 금지
 1. git status / diff — 이슈 범위 파일만 stage (민감·무관 파일 제외)
 2. git commit -m "fix(scope): ...\n\nFixes #{N}"   # footer 필수
 3. git push -u origin HEAD
@@ -62,11 +63,12 @@ Fixes #{N}
   3. `git push`
 - trivial(오타·포맷·단일 코멘트)·조회·진단만 한 응답 → skip.
 - `.env`, `*.token.json`, `google-credentials.json`, `data/issues/*.json` 내 민감 정보는 절대 커밋 본문/이슈 본문에 노출 금지.
-- 충돌·테스트 실패·`pnpm security:check` 실패 시 push 중단 후 사용자에게 보고.
+- 충돌·**build 실패**·테스트 실패·`pnpm security:check` 실패 시 push 중단 후 사용자에게 보고 (`app-build-verify.mdc`).
 
 ## 제약
 
 - ✓ conventional commit: feat / fix / chore / docs / refactor
+- ✓ application + 코드 변경 → `app-build-verify.mdc` (commit·push 전)
 - × force push → 사용자 명시 요청 시에만
 - × 민감 파일 (`.env`, `*.token.json`, credentials) ×
 
