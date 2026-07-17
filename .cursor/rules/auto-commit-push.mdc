@@ -8,9 +8,10 @@ alwaysApply: true
 | 레포 | 동작 |
 |---|---|
 | `my-ai-rules/` | 변경 즉시 commit & push (conventional commit) |
+| `my-ai-study/` | 변경 즉시 commit & push (conventional commit). 아카이브·README·meta 동기화 후 |
 | `my-jira/` | 변경 즉시 commit & push + GitHub 이슈 자동 발행/연동. **코드 변경 시 build 필수** (`app-build-verify`) |
 | `ntnm/` 등 제품 레포 | **GitHub 이슈 #{N} 구현 완료** 시 → 아래 [이슈 Deliverable](#이슈-deliverable-필수-커밋--pr). 코드 변경·push 전 **build 필수** (`app-build-verify`) |
-| 그 외 (`my-ai-study`, ...) | 사용자 요청 시에만 |
+| 그 외 | 사용자 요청 시에만 |
 
 이슈 작업 흐름 → `github-issue-workflow` (진입) · `github-issue-evidence` (캡처) · `github-issue-tracking` (키워드·PR).
 
